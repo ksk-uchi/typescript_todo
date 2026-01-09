@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    /* 基本設定 */
+    "target": "ES2022",                // コンパイル後の JS バージョン (Node.js 20系なら ES2022 以上が最適)
+    "module": "NodeNext",              // 最新の Node.js モジュールシステムに対応
+    "moduleResolution": "NodeNext",    // 依存関係の解決を Node.js 方式に
+    "rootDir": "./src",                // ソースコードの場所
+    "outDir": "./dist",                // ビルド後の出力先
+
+    "strict": true,                    // 全ての厳格な型チェックを有効化
+    "noImplicitAny": true,             // 型が不明な変数(any)を許可しない
+    "skipLibCheck": true,              // 依存ライブラリ(node_modules内)の型チェックをスキップ
+
+    /* 互換性と利便性 */
+    "esModuleInterop": true,           // CommonJS と ES Modules 間の互換性を確保
+    "forceConsistentCasingInFileNames": true, // ファイル名の大小文字を厳密に区別
+    "resolveJsonModule": true,         // JSONファイルを import 可能にする
+
+    /* ソースマップ (デバッグ用) */
+    "sourceMap": true
+  },
+  "include": ["src/**/*"],             // コンパイル対象
+  "exclude": ["node_modules", "dist"]  // 除外対象
+}
