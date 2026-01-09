@@ -5,7 +5,7 @@ services:
       dockerfile: ./Container/App.Dockerfile
       target: builder # マルチステージビルドの builder ステージを利用
     volumes:
-      - .:/app
+      - .:/app:Z
       - /app/node_modules
     ports:
       - "3000:3000"
