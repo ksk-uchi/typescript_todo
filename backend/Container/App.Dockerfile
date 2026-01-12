@@ -9,6 +9,10 @@ ENV PATH="$PNPM_HOME:$PATH"
 ENV PATH="/app/node_modules/.bin:$PATH"
 RUN npm install -g pnpm
 
+# キャッシュを削除してイメージサイズを抑える設定を含めています
+RUN apt-get update -y && \
+    apt-get install -y --no-install-recommends openssl && \
+    rm -rf /var/lib/apt/lists/*
 
 # 依存関係定義のコピー
 COPY package.json pnpm-lock.yaml ./
@@ -29,6 +33,11 @@ WORKDIR /app
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
+
+# キャッシュを削除してイメージサイズを抑える設定を含めています
+RUN apt-get update -y && \
+    apt-get install -y --no-install-recommends openssl && \
+    rm -rf /var/lib/apt/lists/*
 
 EXPOSE 3000
 CMD ["node", "dist/index.js"]

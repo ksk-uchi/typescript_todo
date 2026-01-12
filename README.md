@@ -26,7 +26,13 @@ $ podman compose up --build
 #### run migration
 
 ```shell
-$ podman compose exec app pnpm exec prisma migrate dev
+$ podman compose exec app pnpm exec prisma migrate dev --name (name)
+```
+
+#### db connect
+
+```shell
+$ podman compose exec db mysql -u root -p
 ```
 
 #### stop local dev
