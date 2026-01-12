@@ -1,3 +1,17 @@
+## 2026-01-12
+
+### prisma 導入
+
+`pnpm prisma init --datasource-provider mysql --output ../generated/prisma` すると
+`backend/` に `prisma/` と `prisma.config.ts` というファイルが作られた。
+`prisma.config.ts` というファイルには `process` に対する参照があったが、
+`tsconfig.json` に記載した `rootDir` は `backend/src/` なので、
+`backend/prisma.config.ts` では `@types/node` を認識できず `process` の部分にエラーが出ていた。
+
+これを解決する手段として `rootDir` を `backend/` とする方法と `prisma.config.ts` の先頭に
+`/// <reference types="node" />` という一行を入れる方法を考えた。
+`prisma.config.ts` の情報は開発中に必要なだけだと判断したため後者を選択した。
+
 ## 2026-01-09
 
 ### ToDo アプリのテーブルのアイディア
