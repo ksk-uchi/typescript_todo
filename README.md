@@ -35,8 +35,16 @@ $ podman compose exec app pnpm exec prisma migrate dev --name (name)
 $ podman compose exec db mysql -u root -p
 ```
 
+#### update local db
+
+```shell
+$ podman compose exec db mysqldump --defaults-extra-file=/etc/mysql/conf.d/my.conf todo_db > ./Container/db/db_init/dump.sql
+```
+
 #### stop local dev
 
 ```shell
 $ podman compose down -v
 ```
+
+
