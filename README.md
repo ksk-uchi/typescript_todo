@@ -29,10 +29,16 @@ $ podman compose up --build
 $ podman compose exec app pnpm exec prisma migrate dev --name (name)
 ```
 
+#### prisma client generate
+
+```shell
+$ podman compose exec app pnpm exec prisma generate
+```
+
 #### db connect
 
 ```shell
-$ podman compose exec db mysql -u root -p
+$ make localdb
 ```
 
 #### update local db
@@ -46,5 +52,3 @@ $ podman compose exec db mysqldump --defaults-extra-file=/etc/mysql/conf.d/my.co
 ```shell
 $ podman compose down -v
 ```
-
-
