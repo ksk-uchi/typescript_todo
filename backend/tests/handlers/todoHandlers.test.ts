@@ -1,0 +1,90 @@
+import { describe, it, expect, vi } from "vitest";
+import { createResponse, createRequest } from "node-mocks-http";
+import { prismaMock } from "../helpers/prismaMock";
+import { listTodoHandler, createTodoHandler } from "@/handlers/todoHandlers";
+
+describe("todoHandlers", () => {
+  describe("listTodoHandler", () => {
+    it("全件取得して JSON で返すこと", async () => {
+      const mockTodos = [
+        {
+          id: 1,
+          title: "Task 1",
+          description: null,
+          todoStatusId: 1,
+          createdAt: new Date(),
+        },
+      ];
+      prismaMock.todo.findMany.mockResolvedValue(mockTodos);
+
+      const req = createRequest();
+      const res = createResponse();
+
+      await listTodoHandler(req, res);
+
+      expect(res.statusCode).toBe(200);
+      const expectTodos = mockTodos.map((todo) => {
+        return {
+          ...todo,
+          createdAt: todo.createdAt.toISOString(),
+        };
+      });
+      expect(res._getJSONData()).toEqual(expectTodos);
+      expect(prismaMock.todo.findMany).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("createTodoHandler", () => {
+    it("無効な statusId の場合に 400 エラーを返すこと", async () => {
+      // 該当する status が見つからない状態をシミュレート
+      prismaMock.todoStatus.findMany.mockResolvedValue([]);
+
+      const req = createRequest({
+        body: { title: "New Task", statusId: 999 },
+      });
+      const res = createResponse();
+
+      await createTodoHandler(req, res);
+
+      expect(res.statusCode).toBe(400);
+      expect(res._getJSONData()).toEqual({
+        errorMsg: "invalid statudId(999)",
+      });
+      // todo.create が呼ばれていないことを確認
+      expect(prismaMock.todo.create).not.toHaveBeenCalled();
+    });
+
+    it("有効なデータの場合に 201 を返し Todo を作成すること", async () => {
+      const mockTodoStatus = {
+        id: 1,
+        displayName: "Done",
+        priority: 0,
+      };
+      prismaMock.todoStatus.findMany.mockResolvedValue([mockTodoStatus]);
+      const mockTodo = {
+        id: 1,
+        title: "test title",
+        description: "test description",
+        todoStatusId: 1,
+        createdAt: new Date(),
+      };
+      prismaMock.todo.create.mockResolvedValue(mockTodo);
+
+      const req = createRequest({
+        body: { title: "New Task", description: "Desc", statusId: 1 },
+      });
+      const res = createResponse();
+
+      await createTodoHandler(req, res);
+
+      expect(res.statusCode).toBe(201);
+      expect(prismaMock.todo.create).toHaveBeenCalledWith({
+        data: {
+          title: "New Task",
+          description: "Desc",
+          status: { connect: { id: 1 } },
+        },
+      });
+    });
+  });
+});
