@@ -1,3 +1,25 @@
+## 2026-01-13
+
+### 躓いた
+
+- `nodemon` を使うとき `TSX_DISABLE_CACHE=1` を与えてなかったのでキャッシュが効いててファイル更新が反映されなかった
+- `prisma` の `PrismaMariaDb` を new するときに、　`allowPublicKeyRetrieval: true` を渡していなかったので timeout エラーが出た
+- `prisma` で新しいレコードを作成する際、別テーブルのデータを含めるのであれば `connect` を使う
+  ```typescript
+  const table1Record = await prisma.tableOne.findUniqueOrThrow({
+    where: { id: 1 },
+  });
+  await prisma.tableTwo.create({
+    data: {
+      table1: {
+        connect: {
+          id: table1Record.id,
+        },
+      },
+    },
+  });
+  ```
+
 ## 2026-01-12
 
 ### prisma 導入
