@@ -138,10 +138,6 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
-/prisma/src/generated/prisma
+src/generated/
 
-/generated/prisma
-
-/generated/prisma
-
-/Container/db/db_init/*.sql
+Container/db/db_init/*.sql
