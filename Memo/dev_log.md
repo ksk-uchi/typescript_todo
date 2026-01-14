@@ -1,3 +1,15 @@
+## 2026-01-14
+
+### aider + gemini
+
+- aider は python 3.12 まででしかインストールが成功しなかった。
+  - `mise use -g python@3.12`
+  - `uv tool install aider-chat --with google-genai --python 3.12`
+  - 無料で使うなら `gemini/gemma-3-27b` がよさそう。 `RPD` (１日のリクエスト上限) が 14.4K ある。
+    - 慣れてきて `gemini/gemini-2.5-flash-lite` やそれ以上のモデルを使う場合は課金設定をした方がよさそう
+  - 起動は `aider --model gemini/gemma-3-27b --no-git --cache-prompts`
+    - コミットを作ってもらいたいなら `--no-git` を抜いたらよい
+
 ## 2026-01-13
 
 ### 躓いた
