@@ -35,9 +35,33 @@ describe("todoHandlers", () => {
   });
 
   describe("createTodoHandler", () => {
+    it("リクエストに statusId がないとエラー", async () => {
+      // 該当する status が見つからない状態をシミュレート
+      prismaMock.todoStatus.count.mockResolvedValue(0);
+
+      const req = createRequest({
+        body: { title: "New Task", status: 999 },
+      });
+      const res = createResponse();
+
+      await createTodoHandler(req, res);
+
+      expect(res.statusCode).toBe(400);
+      expect(res._getJSONData()).toEqual({
+        errorMsg: {
+          formErrors: [],
+          fieldErrors: {
+            statusId: ["Invalid input: expected number, received undefined"],
+          },
+        },
+      });
+      // todo.create が呼ばれていないことを確認
+      expect(prismaMock.todo.create).not.toHaveBeenCalled();
+    });
+
     it("無効な statusId の場合に 400 エラーを返すこと", async () => {
       // 該当する status が見つからない状態をシミュレート
-      prismaMock.todoStatus.findMany.mockResolvedValue([]);
+      prismaMock.todoStatus.count.mockResolvedValue(0);
 
       const req = createRequest({
         body: { title: "New Task", statusId: 999 },
@@ -48,7 +72,12 @@ describe("todoHandlers", () => {
 
       expect(res.statusCode).toBe(400);
       expect(res._getJSONData()).toEqual({
-        errorMsg: "invalid statudId(999)",
+        errorMsg: {
+          formErrors: [],
+          fieldErrors: {
+            statusId: ["Invalid statusId(999)"],
+          },
+        },
       });
       // todo.create が呼ばれていないことを確認
       expect(prismaMock.todo.create).not.toHaveBeenCalled();

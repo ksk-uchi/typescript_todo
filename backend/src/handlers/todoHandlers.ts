@@ -8,29 +8,31 @@ export const listTodoHandler = async (req: Request, res: Response) => {
 };
 
 export const createTodoHandler = async (req: Request, res: Response) => {
-  const schema = z.object({
-    title: z.string().min(1),
-    description: z.string().optional(),
-    statusId: z.number().int().positive(),
-  });
+  const schema = z
+    .object({
+      title: z.string().min(1),
+      description: z.string().optional(),
+      statusId: z.number().int().positive(),
+    })
+    .superRefine(async (data, ctx) => {
+      // statusId が存在する場合のみチェックを実行
+      if (data.statusId) {
+        const count = await prisma.todoStatus.count({
+          where: { id: data.statusId },
+        });
 
-  try {
-    const { title, description, statusId } = schema.parse(req.body);
-
-    const statuses = await prisma.todoStatus.findMany({
-      where: {
-        id: statusId,
-      },
+        if (count === 0) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["statusId"], // エラーを出すフィールドを指定
+            message: `Invalid statusId(${data.statusId})`,
+          });
+        }
+      }
     });
 
-    if (statuses.length === 0) {
-      res.status(400).json({
-        errorMsg: `invalid statudId(${statusId})`,
-      });
-      return;
-    }
-
-    const status = statuses[0];
+  try {
+    const { title, description, statusId } = await schema.parseAsync(req.body);
 
     await prisma.todo.create({
       data: {
@@ -38,7 +40,7 @@ export const createTodoHandler = async (req: Request, res: Response) => {
         description: description,
         status: {
           connect: {
-            id: status.id,
+            id: statusId,
           },
         },
       },

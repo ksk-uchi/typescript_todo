@@ -16,20 +16,28 @@ describe("todoHandlers Integration", () => {
     await rollbackTransaction();
   });
 
-  it("Todoを作成してもテスト終了後にロールバックされること", async () => {
+  it("存在しないステータスで todo が作成できないこと", async () => {
     const status = await prisma.todoStatus.create({
       data: { displayName: "Done", priority: 0 },
     });
 
     const req = createRequest({
-      body: { title: "vprisma test", statusId: status.id },
+      body: { title: "test title", statusId: status.id + 1 },
     });
     const res = createResponse();
 
     await createTodoHandler(req, res);
 
     const count = await prisma.todo.count();
-    expect(res.statusCode).toBe(201);
-    expect(count).toBe(1);
+    expect(res.statusCode).toBe(400);
+    expect(count).toBe(0);
+    expect(res._getJSONData()).toEqual({
+      errorMsg: {
+        formErrors: [],
+        fieldErrors: {
+          statusId: [`Invalid statusId(${status.id + 1})`],
+        },
+      },
+    });
   });
 });
