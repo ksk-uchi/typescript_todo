@@ -10,11 +10,6 @@ services:
     ports:
       - "3000:3000"
       - "9229:9229"
-    environment:
-      DB_HOST: db
-      DB_USER: user
-      DB_PASSWORD: password
-      DB_NAME: todo_db
     command: pnpm dev
     depends_on:
       db:
