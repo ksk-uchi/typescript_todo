@@ -7,8 +7,8 @@
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/index.js",
     "dev": "dotenvx run -f .env.local -- nodemon --exec TSX_DISABLE_CACHE=1 tsx --inspect=0.0.0.0:9229 'src/index.ts'",
-    "test": "dotenvx run -f .env.test -- vitest",
-    "test:run": "dotenvx run -f .env.test -- vitest run"
+    "test:local": "dotenvx run -f .env.test.local -- vitest",
+    "test:container": "dotenvx run -f .env.test.container -- vitest"
   },
   "keywords": [],
   "author": "",
