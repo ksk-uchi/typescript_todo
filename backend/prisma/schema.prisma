@@ -6,7 +6,7 @@
 
 generator client {
   provider = "prisma-client"
-  output   = "../generated/prisma"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -28,7 +28,7 @@ model Todo {
   description  String?    @db.VarChar(256)
   status       TodoStatus @relation(fields: [todoStatusId], references: [id])
   todoStatusId Int        @map("todo_status_id")
-  created_at   DateTime   @default(now())
+  createdAt   DateTime    @default(now()) @map("created_at")
 
   @@map("todo")
 }
