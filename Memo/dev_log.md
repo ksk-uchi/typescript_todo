@@ -1,13 +1,25 @@
 ## 2026-01-14
 
+### 所感
+
+- `gemini/gemma-3-27b-it` は gemini 3 程賢くない。。
+- vitest でテスト実行するの DB 接続周りがなかなかうまくいかず時間使った。
+  - dotenv 使ってたけど、テストとアプリで環境変数変えたいしっていろいろ考えた結果 dotenvx 使うことにした。
+    - コマンドの前に環境変数セットするようなのを `dotenvx run -f .env -- command` って感じにできる
+    - これでコンテナでテスト実行もローカルでテスト実行も通るようになったけど、実際はどっちの方がメリット大きいんやろ？
+- TypeScript の勉強がてらサーバーサイドの実装進めてるけど設定系のファイル多い。。
+  - prisma, vitest, zod と見知らぬモジュールにたくさん出会えるのは楽しい
+  - tsconfig.json がいまだに難しい。。。あれフロントエンドエンジニアの方々はどうやって基礎を身に着けるんやろ。。
+- TypeScript の後は Golang もやりたいな。Golang は Antigravity 使ってもうちょっとモダンな開発スタイルでレビュー多めでやってみよっかな。
+
 ### aider + gemini
 
 - aider は python 3.12 まででしかインストールが成功しなかった。
   - `mise use -g python@3.12`
   - `uv tool install aider-chat --with google-genai --python 3.12`
-  - 無料で使うなら `gemini/gemma-3-27b` がよさそう。 `RPD` (１日のリクエスト上限) が 14.4K ある。
+  - 無料で使うなら `gemini/gemma-3-27b-it` がよさそう。 `RPD` (１日のリクエスト上限) が 14.4K ある。
     - 慣れてきて `gemini/gemini-2.5-flash-lite` やそれ以上のモデルを使う場合は課金設定をした方がよさそう
-  - 起動は `aider --model gemini/gemma-3-27b --no-git --cache-prompts`
+  - 起動は `aider --model gemini/gemma-3-27b-it --no-git --cache-prompts`
     - コミットを作ってもらいたいなら `--no-git` を抜いたらよい
 
 ## 2026-01-13
