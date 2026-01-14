@@ -23,6 +23,6 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src/**/*", "tests/**/*", "vitest.config.ts"] // コンパイル対象
-  // "exclude": ["node_modules", "dist", "tests"] // 除外対象
+  "include": ["src/**/*", "tests/**/*", "vitest.config.ts"], // コンパイル対象
+  "exclude": ["node_modules", "dist"] // 除外対象
 }
