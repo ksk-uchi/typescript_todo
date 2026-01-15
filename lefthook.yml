@@ -1,0 +1,7 @@
+pre-commit:
+  commands:
+    backend-linter:
+      root: "backend/"
+      # tsファイルのみ対象
+      glob: "*.{ts}"
+      run: pnpm prettier -w {staged_files} && pnpm eslint {staged_files}
