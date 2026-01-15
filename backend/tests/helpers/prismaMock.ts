@@ -1,6 +1,7 @@
-import { PrismaClient } from "@/generated/prisma/client";
 import { beforeEach, vi } from "vitest";
-import { mockDeep, mockReset, DeepMockProxy } from "vitest-mock-extended";
+import { DeepMockProxy, mockDeep, mockReset } from "vitest-mock-extended";
+
+import { PrismaClient } from "@/generated/prisma/client";
 import { prisma } from "@/utils/prisma";
 
 // 実際のインスタンスをモックに差し替える
