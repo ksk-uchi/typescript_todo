@@ -22,7 +22,7 @@ export async function setup() {
     console.log(`Ensuring database '${DB_NAME}' exists...`);
     // CREATE DATABASE IF NOT EXISTS は、存在しない場合にのみデータベースを作成します。
     await adminClient.$executeRawUnsafe(
-      `CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;`
+      `CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;`,
     );
     console.log(`Database '${DB_NAME}' is ready.`);
   } catch (error) {

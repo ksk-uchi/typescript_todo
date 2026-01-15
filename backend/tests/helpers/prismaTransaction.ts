@@ -8,7 +8,7 @@ const originalModels: Record<string, any> = {};
  */
 const getModelNames = (client: any) => {
   return Object.getOwnPropertyNames(client).filter(
-    (key) => !key.startsWith("$") && !key.startsWith("_")
+    (key) => !key.startsWith("$") && !key.startsWith("_"),
   );
 };
 
