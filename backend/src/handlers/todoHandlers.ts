@@ -4,7 +4,10 @@ import { z } from "zod";
 
 export const listTodoHandler = async (req: Request, res: Response) => {
   const rows = await prisma.todo.findMany();
-  res.json(rows);
+  const response = {
+    todo: rows,
+  };
+  res.json(response);
 };
 
 export const createTodoHandler = async (req: Request, res: Response) => {
