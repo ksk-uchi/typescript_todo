@@ -1,7 +1,7 @@
-import { describe, it, expect } from "vitest";
-import { createResponse, createRequest } from "node-mocks-http";
+import { createTodoHandler, listTodoHandler } from "@/handlers/todoHandlers";
+import { createRequest, createResponse } from "node-mocks-http";
+import { describe, expect, it } from "vitest";
 import { prismaMock } from "../helpers/prismaMock";
-import { listTodoHandler, createTodoHandler } from "@/handlers/todoHandlers";
 
 describe("todoHandlers", () => {
   describe("listTodoHandler", () => {
@@ -23,12 +23,14 @@ describe("todoHandlers", () => {
       await listTodoHandler(req, res);
 
       expect(res.statusCode).toBe(200);
-      const expectTodos = mockTodos.map((todo) => {
-        return {
-          ...todo,
-          createdAt: todo.createdAt.toISOString(),
-        };
-      });
+      const expectTodos = {
+        todo: mockTodos.map((todo) => {
+          return {
+            ...todo,
+            createdAt: todo.createdAt.toISOString(),
+          };
+        }),
+      };
       expect(res._getJSONData()).toEqual(expectTodos);
       expect(prismaMock.todo.findMany).toHaveBeenCalledTimes(1);
     });
