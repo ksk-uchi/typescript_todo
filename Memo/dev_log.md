@@ -2,7 +2,18 @@
 
 ### 所感
 
-- (wip)
+- `prettier` と `prettier-plugin-organize-imports` を導入したは良いが、それにより import がアルファベタイズするようになったせいでテストがこけた。
+  - Prisma Client をモック化するヘルパーの import を Prisma Client を使っているファイルの import よりも先にしないといけなかった。
+- よくよく考えたら Linter を入れてなかったので導入した。
+- CRUD API の実装を進めているけど、レスポンスの形をふんわりとしか考えてなかったから後から調整が必要そう。
+  - 例えば Todo 1 件の詳細を取得する GET API のレスポンスに `todoStatusId` があるけど、これは展開して `displayName, priority` を返すとか
+  - `todoStatusId` と `statusId` が混在しているのも気持ち悪いから `todoStatusId` に統一したいかも。
+
+### Lefthook
+
+- `Lefthook` という git commit hook の仕組みを導入した。
+- husky でもよかったが、今後 `backend/` と同階層に `frontend/` も作るし、設定がいろいろ違う可能性も考慮して `Lefthook` にした。
+- `pnpm lefthook run pre-commit` としたら手動実行できる
 
 ## 2026-01-14
 
