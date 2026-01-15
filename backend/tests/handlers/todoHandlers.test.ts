@@ -1,7 +1,8 @@
-import { createTodoHandler, listTodoHandler } from "@/handlers/todoHandlers";
 import { createRequest, createResponse } from "node-mocks-http";
 import { describe, expect, it } from "vitest";
 import { prismaMock } from "../helpers/prismaMock";
+
+import { createTodoHandler, listTodoHandler } from "@/handlers/todoHandlers";
 
 describe("todoHandlers", () => {
   describe("listTodoHandler", () => {
