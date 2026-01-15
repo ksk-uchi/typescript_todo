@@ -8,8 +8,7 @@
     "start": "node dist/index.js",
     "dev": "dotenvx run -f .env.local -- nodemon --exec TSX_DISABLE_CACHE=1 tsx --inspect=0.0.0.0:9229 'src/index.ts'",
     "test:local": "dotenvx run -f .env.test.local -- vitest",
-    "test:container": "dotenvx run -f .env.test.container -- vitest",
-    "pre-commit:prepare": "simple-git-hooks"
+    "test:container": "dotenvx run -f .env.test.container -- vitest"
   },
   "keywords": [],
   "author": "",
@@ -32,7 +31,6 @@
     "nodemon": "^3.1.11",
     "prettier": "^3.8.0",
     "prisma": "^7.2.0",
-    "simple-git-hooks": "^2.13.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.53.0",
@@ -45,11 +43,7 @@
       "esbuild@0.27.2",
       "@prisma/engines@7.2.0",
       "prisma@7.2.0",
-      "unrs-resolver@1.11.1",
-      "simple-git-hooks@2.13.1"
+      "unrs-resolver@1.11.1"
     ]
-  },
-  "simple-git-hooks": {
-    "pre-commit": "cd backend && pnpm prettier -w . && pnpm eslint"
   }
 }
