@@ -6,6 +6,7 @@ import {
   createTodoHandler,
   detailTodoHandler,
   listTodoHandler,
+  updateTodoHandler,
 } from "@/handlers/todoHandlers";
 
 describe("todoHandlers", () => {
@@ -173,6 +174,26 @@ describe("todoHandlers", () => {
           title: "New Task",
           description: "Desc",
           status: { connect: { id: 1 } },
+        },
+      });
+    });
+  });
+
+  describe("updateTodoHandler", () => {
+    it("todoId が数値化できる文字列ではないときエラー", async () => {
+      const req = createRequest();
+      req.params.todoId = "test";
+      const res = createResponse();
+
+      await updateTodoHandler(req, res);
+
+      expect(res.statusCode).toBe(400);
+      expect(res._getJSONData()).toEqual({
+        errorMsg: {
+          fieldErrors: {
+            todoId: ["Invalid input: expected number, received NaN"],
+          },
+          formErrors: [],
         },
       });
     });
