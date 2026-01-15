@@ -2,7 +2,11 @@ import { createRequest, createResponse } from "node-mocks-http";
 import { describe, expect, it } from "vitest";
 import { prismaMock } from "../helpers/prismaMock";
 
-import { createTodoHandler, listTodoHandler } from "@/handlers/todoHandlers";
+import {
+  createTodoHandler,
+  detailTodoHandler,
+  listTodoHandler,
+} from "@/handlers/todoHandlers";
 
 describe("todoHandlers", () => {
   describe("listTodoHandler", () => {
@@ -34,6 +38,60 @@ describe("todoHandlers", () => {
       };
       expect(res._getJSONData()).toEqual(expectTodos);
       expect(prismaMock.todo.findMany).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("detailTodoHandler", () => {
+    it("一件取得して JSON で返すこと", async () => {
+      const mockTodo = {
+        id: 1,
+        title: "Task 1",
+        description: null,
+        todoStatusId: 1,
+        createdAt: new Date(),
+      };
+      prismaMock.todo.findUnique.mockResolvedValue(mockTodo);
+
+      const req = createRequest();
+      req.params.todoId = "1";
+      const res = createResponse();
+
+      await detailTodoHandler(req, res);
+
+      expect(res.statusCode).toBe(200);
+      const expectTodo = {
+        ...mockTodo,
+        createdAt: mockTodo.createdAt.toISOString(),
+      };
+      expect(res._getJSONData()).toEqual(expectTodo);
+      expect(prismaMock.todo.findUnique).toHaveBeenCalledTimes(1);
+    });
+
+    it("todoId が数値化できる文字列ではないときエラー", async () => {
+      const mockTodo = {
+        id: 1,
+        title: "Task 1",
+        description: null,
+        todoStatusId: 1,
+        createdAt: new Date(),
+      };
+      prismaMock.todo.findUnique.mockResolvedValue(mockTodo);
+
+      const req = createRequest();
+      req.params.todoId = "test";
+      const res = createResponse();
+
+      await detailTodoHandler(req, res);
+
+      expect(res.statusCode).toBe(400);
+      expect(res._getJSONData()).toEqual({
+        errorMsg: {
+          fieldErrors: {
+            todoId: ["Invalid input: expected number, received NaN"],
+          },
+          formErrors: [],
+        },
+      });
     });
   });
 

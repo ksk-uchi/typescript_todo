@@ -10,6 +10,31 @@ export const listTodoHandler = async (req: Request, res: Response) => {
   res.json(response);
 };
 
+export const detailTodoHandler = async (req: Request, res: Response) => {
+  const schema = z.object({
+    todoId: z.coerce.number<string>(),
+  });
+
+  const result = schema.safeParse(req.params);
+  if (!result.success) {
+    return res.status(400).json({
+      errorMsg: z.flattenError(result.error),
+    });
+  }
+
+  const { todoId } = result.data;
+  const todo = await prisma.todo.findUnique({
+    where: {
+      id: todoId,
+    },
+  });
+  if (!todo) {
+    return res.status(404);
+  }
+
+  res.json(todo);
+};
+
 export const createTodoHandler = async (req: Request, res: Response) => {
   const schema = z
     .object({
