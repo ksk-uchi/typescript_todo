@@ -1,11 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { createResponse, createRequest } from "node-mocks-http";
-import { createTodoHandler } from "@/handlers/todoHandlers";
+import { createTodoHandler, updateTodoHandler } from "@/handlers/todoHandlers";
 import { prisma } from "@/utils/prisma";
+import { createRequest, createResponse } from "node-mocks-http";
 import {
-  startTransaction,
   rollbackTransaction,
+  startTransaction,
 } from "tests/helpers/prismaTransaction";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 describe("todoHandlers Integration", () => {
   beforeEach(async () => {
@@ -38,6 +38,55 @@ describe("todoHandlers Integration", () => {
           statusId: [`Invalid statusId(${status.id + 1})`],
         },
       },
+    });
+  });
+
+  it("todo が正常に更新できること", async () => {
+    await prisma.todoStatus.createMany({
+      data: [
+        { displayName: "Done", priority: 0 },
+        { displayName: "InProgress", priority: 1 },
+      ],
+    });
+    const statuses = await prisma.todoStatus.findMany();
+    expect(statuses.length).toBe(2);
+
+    const todo = await prisma.todo.create({
+      data: {
+        title: "test title",
+        description: "test description",
+        todoStatusId: statuses[0].id,
+      },
+    });
+
+    const requestBody = {
+      title: "new title",
+      statusId: statuses[1].id,
+    };
+    const req = createRequest({
+      body: requestBody,
+    });
+    req.params.todoId = `${todo.id}`;
+    const res = createResponse();
+
+    await updateTodoHandler(req, res);
+
+    expect(res.statusCode).toBe(200);
+
+    expect(res._getJSONData()).toEqual({
+      ...todo,
+      title: requestBody.title,
+      todoStatusId: requestBody.statusId,
+      createdAt: todo.createdAt.toISOString(),
+    });
+
+    const updatedTodo = await prisma.todo.findUnique({
+      where: { id: todo.id },
+    });
+    expect(updatedTodo).toEqual({
+      ...todo,
+      title: requestBody.title,
+      todoStatusId: requestBody.statusId,
     });
   });
 });
