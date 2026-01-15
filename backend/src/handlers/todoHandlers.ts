@@ -59,31 +59,25 @@ export const createTodoHandler = async (req: Request, res: Response) => {
       }
     });
 
-  try {
-    const { title, description, statusId } = await schema.parseAsync(req.body);
+  const result = await schema.safeParseAsync(req.body);
+  if (!result.success) {
+    return res.status(400).json({
+      errorMsg: z.flattenError(result.error),
+    });
+  }
+  const { title, description, statusId } = await schema.parseAsync(req.body);
 
-    await prisma.todo.create({
-      data: {
-        title: title,
-        description: description,
-        status: {
-          connect: {
-            id: statusId,
-          },
+  await prisma.todo.create({
+    data: {
+      title: title,
+      description: description,
+      status: {
+        connect: {
+          id: statusId,
         },
       },
-    });
+    },
+  });
 
-    res.status(201).send();
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      res.status(400).json({
-        errorMsg: z.flattenError(error),
-      });
-    } else {
-      res.status(500).json({
-        errorMsg: "Internal server error",
-      });
-    }
-  }
+  res.status(201).send();
 };
