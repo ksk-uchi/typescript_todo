@@ -148,3 +148,8 @@ export const updateTodoHandler = async (req: Request, res: Response) => {
     return res.status(500).send("Update failed.");
   }
 };
+
+export const deleteTodoHandler = async (req: Request, res: Response) => {
+  console.log(req.params);
+  res.send();
+};
