@@ -1,4 +1,8 @@
-import { createTodoHandler, updateTodoHandler } from "@/handlers/todoHandlers";
+import {
+  createTodoHandler,
+  deleteTodoHandler,
+  updateTodoHandler,
+} from "@/handlers/todoHandlers";
 import { prisma } from "@/utils/prisma";
 import { createRequest, createResponse } from "node-mocks-http";
 import {
@@ -88,5 +92,33 @@ describe("todoHandlers Integration", () => {
       title: requestBody.title,
       todoStatusId: requestBody.statusId,
     });
+  });
+
+  it("todo が削除できること", async () => {
+    const status = await prisma.todoStatus.create({
+      data: { displayName: "Done", priority: 0 },
+    });
+
+    const todo = await prisma.todo.create({
+      data: {
+        title: "test title",
+        description: "test description",
+        todoStatusId: status.id,
+      },
+    });
+
+    const req = createRequest();
+    req.params.todoId = `${todo.id}`;
+    const res = createResponse();
+
+    await deleteTodoHandler(req, res);
+
+    expect(res.statusCode).toBe(200);
+
+    expect(
+      await prisma.todo.count({
+        where: { id: todo.id },
+      }),
+    ).equal(0);
   });
 });

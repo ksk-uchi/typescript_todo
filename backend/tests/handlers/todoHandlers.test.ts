@@ -4,6 +4,7 @@ import { prismaMock } from "../helpers/prismaMock";
 
 import {
   createTodoHandler,
+  deleteTodoHandler,
   detailTodoHandler,
   listTodoHandler,
   updateTodoHandler,
@@ -196,6 +197,36 @@ describe("todoHandlers", () => {
           formErrors: [],
         },
       });
+    });
+  });
+
+  describe("deleteTodoHandler", () => {
+    it("todoId が数値化できる文字列ではないときエラー", async () => {
+      const req = createRequest();
+      req.params.todoId = "test";
+      const res = createResponse();
+
+      await deleteTodoHandler(req, res);
+
+      expect(res.statusCode).toBe(400);
+      expect(res._getJSONData()).toEqual({
+        errorMsg: {
+          fieldErrors: {
+            todoId: ["Invalid input: expected number, received NaN"],
+          },
+          formErrors: [],
+        },
+      });
+    });
+    it("削除ができる", async () => {
+      const req = createRequest();
+      req.params.todoId = "1";
+      const res = createResponse();
+
+      await deleteTodoHandler(req, res);
+
+      expect(res.statusCode).toBe(200);
+      expect(prismaMock.todo.delete).toHaveBeenCalledOnce();
     });
   });
 });
