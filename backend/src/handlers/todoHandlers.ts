@@ -1,3 +1,4 @@
+import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/utils/prisma";
 import { Request, Response } from "express";
 import { z } from "zod";
@@ -29,7 +30,7 @@ export const detailTodoHandler = async (req: Request, res: Response) => {
     },
   });
   if (!todo) {
-    return res.status(404);
+    return res.status(404).send();
   }
 
   res.json(todo);
@@ -101,7 +102,7 @@ export const updateTodoHandler = async (req: Request, res: Response) => {
     },
   });
   if (!todo) {
-    return res.status(404);
+    return res.status(404).send();
   }
 
   const reqSchema = z
