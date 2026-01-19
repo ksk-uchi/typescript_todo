@@ -25,7 +25,6 @@
   },
   "devDependencies": {
     "@react-router/dev": "7.12.0",
-    "@tailwindcss/vite": "^4.1.13",
     "@types/node": "^22",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
@@ -34,7 +33,6 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "prettier": "^3.8.0",
     "prettier-plugin-organize-imports": "^4.3.0",
-    "tailwindcss": "^4.1.13",
     "typescript": "^5.9.2",
     "vite": "^7.1.7",
     "vite-plugin-babel": "^1.4.1",
