@@ -1,14 +1,6 @@
-import {
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-  Checkbox,
-  IconButton,
-  Paper,
-} from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
+import { IconButton, List, ListItem, ListItemText, Paper } from "@mui/material";
 import type { Todo } from "../types";
 
 interface TodoListProps {

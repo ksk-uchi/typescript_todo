@@ -1,13 +1,13 @@
-import { useEffect, useState } from "react";
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
   Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  TextField,
 } from "@mui/material";
-import type { Todo, CreateTodoDto, UpdateTodoDto } from "../types";
+import { useEffect, useState } from "react";
+import type { CreateTodoDto, Todo, UpdateTodoDto } from "../types";
 
 interface TodoModalProps {
   open: boolean;
