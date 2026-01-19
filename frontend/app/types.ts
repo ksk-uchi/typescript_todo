@@ -10,3 +10,9 @@ export type CreateTodoDto = Pick<Todo, "title" | "description" | "statusId">;
 export type UpdateTodoDto = Partial<
   Pick<Todo, "title" | "description" | "statusId">
 >;
+
+export interface TodoStatus {
+  id: number;
+  displayName: string;
+  priority: number;
+}
