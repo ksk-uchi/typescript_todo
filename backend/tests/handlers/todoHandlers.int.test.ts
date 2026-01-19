@@ -78,9 +78,10 @@ describe("todoHandlers Integration", () => {
     expect(res.statusCode).toBe(200);
 
     expect(res._getJSONData()).toEqual({
-      ...todo,
+      id: todo.id,
       title: requestBody.title,
-      todoStatusId: requestBody.statusId,
+      description: todo.description,
+      statusId: requestBody.statusId,
       createdAt: todo.createdAt.toISOString(),
     });
 
