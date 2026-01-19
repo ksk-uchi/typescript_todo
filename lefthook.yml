@@ -5,3 +5,7 @@ pre-commit:
       # tsファイルのみ対象
       glob: "*.{ts}"
       run: pnpm prettier -w {staged_files} && pnpm eslint {staged_files}
+    frontend-linter:
+      root: "frontend/"
+      glob: "*.{ts}"
+      run: pnpm prettier -w {staged_files} && pnpm eslint {staged_files}
