@@ -7,5 +7,5 @@ pre-commit:
       run: pnpm prettier -w {staged_files} && pnpm eslint {staged_files}
     frontend-linter:
       root: "frontend/"
-      glob: "*.{ts}"
+      glob: "*.{ts,tsx}"
       run: pnpm prettier -w {staged_files} && pnpm eslint {staged_files}
