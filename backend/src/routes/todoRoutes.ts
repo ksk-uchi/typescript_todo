@@ -5,7 +5,8 @@ import {
   listTodoHandler,
   updateTodoHandler,
 } from "@/handlers/todoHandlers";
-import { Express, NextFunction, Request, Response } from "express";
+import { listTodoStatusHandler } from "@/handlers/todoStatusHandlers";
+import { Express, NextFunction, Request, Response, Router } from "express";
 
 export const allowOrigin = (
   req: Request,
@@ -32,4 +33,7 @@ export const setTodoRoutes = (app: Express) => {
   app.patch("/todo/:todoId", updateTodoHandler);
   app.delete("/todo/:todoId", deleteTodoHandler);
   app.post("/create_todo", createTodoHandler);
+  const todoStatusRouter = Router();
+  app.use("/todo_status", todoStatusRouter);
+  todoStatusRouter.get("/", listTodoStatusHandler);
 };
