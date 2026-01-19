@@ -33,7 +33,10 @@ describe("todoHandlers", () => {
       const expectTodos = {
         todo: mockTodos.map((todo) => {
           return {
-            ...todo,
+            id: todo.id,
+            title: todo.title,
+            description: todo.description,
+            statusId: todo.todoStatusId,
             createdAt: todo.createdAt.toISOString(),
           };
         }),
@@ -62,7 +65,10 @@ describe("todoHandlers", () => {
 
       expect(res.statusCode).toBe(200);
       const expectTodo = {
-        ...mockTodo,
+        id: mockTodo.id,
+        title: mockTodo.title,
+        description: mockTodo.description,
+        statusId: mockTodo.todoStatusId,
         createdAt: mockTodo.createdAt.toISOString(),
       };
       expect(res._getJSONData()).toEqual(expectTodo);
@@ -170,6 +176,14 @@ describe("todoHandlers", () => {
       await createTodoHandler(req, res);
 
       expect(res.statusCode).toBe(201);
+      const expectTodo = {
+        id: mockTodo.id,
+        title: mockTodo.title,
+        description: mockTodo.description,
+        statusId: mockTodo.todoStatusId,
+        createdAt: mockTodo.createdAt.toISOString(),
+      };
+      expect(res._getJSONData()).toEqual(expectTodo);
       expect(prismaMock.todo.create).toHaveBeenCalledWith({
         data: {
           title: "New Task",

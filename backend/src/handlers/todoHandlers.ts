@@ -3,10 +3,28 @@ import { prisma } from "@/utils/prisma";
 import { Request, Response } from "express";
 import { z } from "zod";
 
+type TodoResponse = {
+  id: number;
+  title: string;
+  description: string | null;
+  statusId: number;
+  createdAt: Date;
+};
+
+function createTodoResponse(todo: Prisma.TodoGetPayload<object>): TodoResponse {
+  return {
+    id: todo.id,
+    title: todo.title,
+    description: todo.description,
+    statusId: todo.todoStatusId,
+    createdAt: todo.createdAt,
+  };
+}
+
 export const listTodoHandler = async (req: Request, res: Response) => {
   const rows = await prisma.todo.findMany();
   const response = {
-    todo: rows,
+    todo: rows.map(createTodoResponse),
   };
   res.json(response);
 };
@@ -33,7 +51,7 @@ export const detailTodoHandler = async (req: Request, res: Response) => {
     return res.status(404).send();
   }
 
-  res.json(todo);
+  res.json(createTodoResponse(todo));
 };
 
 export const createTodoHandler = async (req: Request, res: Response) => {
@@ -68,7 +86,7 @@ export const createTodoHandler = async (req: Request, res: Response) => {
   }
   const { title, description, statusId } = await schema.parseAsync(req.body);
 
-  await prisma.todo.create({
+  const todo = await prisma.todo.create({
     data: {
       title: title,
       description: description,
@@ -80,7 +98,7 @@ export const createTodoHandler = async (req: Request, res: Response) => {
     },
   });
 
-  res.status(201).send();
+  res.status(201).json(createTodoResponse(todo));
 };
 
 export const updateTodoHandler = async (req: Request, res: Response) => {
@@ -144,7 +162,7 @@ export const updateTodoHandler = async (req: Request, res: Response) => {
         todoStatusId: statusId,
       },
     });
-    res.json(updatedTodo);
+    res.json(createTodoResponse(updatedTodo));
   } catch {
     return res.status(500).send("Update failed.");
   }
