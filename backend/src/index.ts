@@ -1,9 +1,11 @@
+import { allowOrigin } from "@/middlewares/allowOrigin";
+import { setAllRoutes } from "@/routes";
 import express from "express";
-import { setTodoRoutes } from "@/routes/todoRoutes";
 
 const app = express();
 app.use(express.json());
+app.use(allowOrigin);
 
-setTodoRoutes(app);
+setAllRoutes(app);
 
 app.listen(3000, () => console.log("Server running on port 3000"));

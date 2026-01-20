@@ -6,6 +6,9 @@ import type {
 } from "../types";
 
 const BASE_URL = "http://localhost:3000/todo_status";
+const api = axios.create({
+  baseURL: BASE_URL,
+});
 
 interface ListApiResponse {
   todoStatus: TodoStatus[];
@@ -13,28 +16,25 @@ interface ListApiResponse {
 
 export const todoStatusApi = {
   getAll: async (): Promise<TodoStatus[]> => {
-    const response = await axios.get<ListApiResponse>(`${BASE_URL}/`);
+    const response = await api.get<ListApiResponse>("/");
     // 優先度 (priority) の昇順でソート
     return response.data.todoStatus.sort((a, b) => a.priority - b.priority);
+  },
+  create: async (data: CreateTodoStatusDto): Promise<TodoStatus> => {
+    const response = await api.post<{ todoStatus: TodoStatus }>("/", data);
+    return response.data.todoStatus;
   },
   update: async (
     id: number,
     data: UpdateTodoStatusDto,
   ): Promise<TodoStatus> => {
-    const response = await axios.patch<{ todoStatus: TodoStatus }>(
-      `${BASE_URL}/${id}`,
+    const response = await api.patch<{ todoStatus: TodoStatus }>(
+      `/${id}`,
       data,
     );
     return response.data.todoStatus;
   },
   delete: async (id: number): Promise<void> => {
-    await axios.delete(`${BASE_URL}/${id}`);
-  },
-  create: async (data: CreateTodoStatusDto): Promise<TodoStatus> => {
-    const response = await axios.post<{ todoStatus: TodoStatus }>(
-      `${BASE_URL}/`,
-      data,
-    );
-    return response.data.todoStatus;
+    await api.delete(`/${id}`);
   },
 };
