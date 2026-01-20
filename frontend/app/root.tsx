@@ -1,3 +1,4 @@
+import CssBaseline from "@mui/material/CssBaseline";
 import {
   isRouteErrorResponse,
   Links,
@@ -32,6 +33,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
+        <CssBaseline />
         {children}
         <ScrollRestoration />
         <Scripts />
@@ -40,11 +42,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
+import { MainLayout } from "./components/MainLayout";
+
 export default function App() {
   return (
-    <>
+    <MainLayout>
       <Outlet />
-    </>
+    </MainLayout>
   );
 }
 
