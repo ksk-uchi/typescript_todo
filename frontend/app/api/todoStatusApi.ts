@@ -1,5 +1,9 @@
 import axios from "axios";
-import type { TodoStatus, UpdateTodoStatusDto } from "../types";
+import type {
+  CreateTodoStatusDto,
+  TodoStatus,
+  UpdateTodoStatusDto,
+} from "../types";
 
 const BASE_URL = "http://localhost:3000/todo_status";
 
@@ -25,5 +29,12 @@ export const todoStatusApi = {
   },
   delete: async (id: number): Promise<void> => {
     await axios.delete(`${BASE_URL}/${id}`);
+  },
+  create: async (data: CreateTodoStatusDto): Promise<TodoStatus> => {
+    const response = await axios.post<{ todoStatus: TodoStatus }>(
+      `${BASE_URL}/`,
+      data,
+    );
+    return response.data.todoStatus;
   },
 };
