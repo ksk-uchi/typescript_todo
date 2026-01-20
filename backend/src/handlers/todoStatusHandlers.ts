@@ -65,3 +65,34 @@ export const updateTodoStatusHandler = async (req: Request, res: Response) => {
   };
   res.json(response);
 };
+
+export const deleteTodoStatusHandler = async (req: Request, res: Response) => {
+  const paramSchema = z
+    .object({
+      todoStatusId: z.coerce.number().int(),
+    })
+    .superRefine(async (data, ctx) => {
+      // todoStatusId を参照するデータが todo に存在するかチェック
+      if (data.todoStatusId) {
+        const count = await prisma.todo.count({
+          where: { todoStatusId: data.todoStatusId },
+        });
+
+        if (count > 0) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["todoStatusId"],
+            message: `TodoStatusId(${data.todoStatusId}) is used by todo`,
+          });
+        }
+      }
+    });
+  const result = await paramSchema.safeParseAsync(req.params);
+  if (!result.success) {
+    return res.status(400).send(z.flattenError(result.error));
+  }
+  await prisma.todoStatus.delete({
+    where: { id: result.data.todoStatusId },
+  });
+  res.status(204).send();
+};

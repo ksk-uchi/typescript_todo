@@ -1,4 +1,5 @@
 import {
+  deleteTodoStatusHandler,
   listTodoStatusHandler,
   updateTodoStatusHandler,
 } from "@/handlers/todoStatusHandlers";
@@ -57,7 +58,6 @@ describe("todoStatusHandlers Integration", () => {
   });
 
   it("priority が重複する場合はエラーを返すこと", async () => {
-    // テストデータの作成
     await prisma.todoStatus.createMany({
       data: [
         { displayName: "TODO", priority: 1 },
@@ -80,5 +80,39 @@ describe("todoStatusHandlers Integration", () => {
     const responseData = res._getData();
 
     expect(responseData).toBe("Priority(2) already exists");
+  });
+
+  it("削除しようとした todo ステータスが使用されている場合は 400 を返すこと", async () => {
+    await prisma.todoStatus.createMany({
+      data: [
+        { displayName: "TODO", priority: 1 },
+        { displayName: "DOING", priority: 2 },
+      ],
+    });
+    const statuses = await prisma.todoStatus.findMany();
+    await prisma.todo.create({
+      data: {
+        title: "test",
+        description: "test",
+        todoStatusId: statuses[0].id,
+      },
+    });
+
+    const req = createRequest({
+      params: { todoStatusId: statuses[0].id },
+    });
+    const res = createResponse();
+
+    await deleteTodoStatusHandler(req, res);
+
+    expect(res.statusCode).toBe(400);
+    const responseData = res._getData();
+
+    expect(responseData).toEqual({
+      fieldErrors: {
+        todoStatusId: [`TodoStatusId(${statuses[0].id}) is used by todo`],
+      },
+      formErrors: [],
+    });
   });
 });

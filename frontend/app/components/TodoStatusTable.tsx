@@ -15,15 +15,18 @@ import type { TodoStatus, UpdateTodoStatusDto } from "../types";
 interface TodoStatusTableProps {
   statuses: TodoStatus[];
   onUpdate: (id: number, data: UpdateTodoStatusDto) => Promise<void>;
+  onDelete: (id: number) => Promise<void>;
 }
 
 export default function TodoStatusTable({
   statuses,
   onUpdate,
+  onDelete,
 }: TodoStatusTableProps) {
   const [editFormData, setEditFormData] = useState<
     Record<number, UpdateTodoStatusDto>
   >({});
+  const [deletingIds, setDeletingIds] = useState<Set<number>>(new Set());
 
   const handleEditClick = (status: TodoStatus) => {
     setEditFormData((prev) => ({
@@ -43,6 +46,19 @@ export default function TodoStatusTable({
         const newState = { ...prev };
         delete newState[id];
         return newState;
+      });
+    }
+  };
+
+  const handleDeleteClick = async (id: number) => {
+    setDeletingIds((prev) => new Set(prev).add(id));
+    try {
+      await onDelete(id);
+    } catch {
+      setDeletingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
       });
     }
   };
@@ -75,12 +91,14 @@ export default function TodoStatusTable({
           {statuses.map((status) => {
             const isEditing = status.id in editFormData;
             const currentData = editFormData[status.id] || {};
+            const isDeleting = deletingIds.has(status.id);
 
             return (
               <TableRow key={status.id} hover>
                 <TableCell>
                   {isEditing ? (
                     <TextField
+                      disabled={isDeleting}
                       value={currentData.displayName || ""}
                       onChange={(e) =>
                         handleChange(status.id, "displayName", e.target.value)
@@ -96,6 +114,7 @@ export default function TodoStatusTable({
                 <TableCell>
                   {isEditing ? (
                     <TextField
+                      disabled={isDeleting}
                       value={currentData.priority ?? ""}
                       onChange={(e) =>
                         handleChange(
@@ -117,20 +136,34 @@ export default function TodoStatusTable({
                   {isEditing ? (
                     <Button
                       variant="contained"
-                      color="primary" // Success color is often primary or explicitly success in mui but standard contained is fine for now, user asked for save button
+                      color="primary"
                       onClick={() => handleSaveClick(status.id)}
                       size="small"
+                      disabled={isDeleting}
                     >
                       保存
                     </Button>
                   ) : (
-                    <Button
-                      variant="outlined"
-                      onClick={() => handleEditClick(status)}
-                      size="small"
-                    >
-                      更新
-                    </Button>
+                    <>
+                      <Button
+                        variant="outlined"
+                        onClick={() => handleEditClick(status)}
+                        size="small"
+                        disabled={isDeleting}
+                        sx={{ mr: 1 }}
+                      >
+                        更新
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        onClick={() => handleDeleteClick(status.id)}
+                        size="small"
+                        disabled={isDeleting}
+                      >
+                        削除
+                      </Button>
+                    </>
                   )}
                 </TableCell>
               </TableRow>
