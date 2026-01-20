@@ -6,6 +6,7 @@ import {
   updateTodoHandler,
 } from "@/handlers/todoHandlers";
 import {
+  deleteTodoStatusHandler,
   listTodoStatusHandler,
   updateTodoStatusHandler,
 } from "@/handlers/todoStatusHandlers";
@@ -40,4 +41,5 @@ export const setTodoRoutes = (app: Express) => {
   app.use("/todo_status", todoStatusRouter);
   todoStatusRouter.get("/", listTodoStatusHandler);
   todoStatusRouter.patch("/:todoStatusId", updateTodoStatusHandler);
+  todoStatusRouter.delete("/:todoStatusId", deleteTodoStatusHandler);
 };
