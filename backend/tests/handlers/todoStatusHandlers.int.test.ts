@@ -1,4 +1,7 @@
-import { listTodoStatusHandler } from "@/handlers/todoStatusHandlers";
+import {
+  listTodoStatusHandler,
+  updateTodoStatusHandler,
+} from "@/handlers/todoStatusHandlers";
 import { prisma } from "@/utils/prisma";
 import { createRequest, createResponse } from "node-mocks-http";
 import {
@@ -51,5 +54,31 @@ describe("todoStatusHandlers Integration", () => {
       displayName: "Middle",
       priority: 3,
     });
+  });
+
+  it("priority が重複する場合はエラーを返すこと", async () => {
+    // テストデータの作成
+    await prisma.todoStatus.createMany({
+      data: [
+        { displayName: "TODO", priority: 1 },
+        { displayName: "DOING", priority: 2 },
+      ],
+    });
+    const targetTodoStatus = await prisma.todoStatus.findFirst({
+      where: { displayName: "TODO" },
+    });
+
+    const req = createRequest({
+      params: { todoStatusId: targetTodoStatus?.id },
+      body: { displayName: "Pending", priority: 2 },
+    });
+    const res = createResponse();
+
+    await updateTodoStatusHandler(req, res);
+
+    expect(res.statusCode).toBe(400);
+    const responseData = res._getData();
+
+    expect(responseData).toBe("Priority(2) already exists");
   });
 });
