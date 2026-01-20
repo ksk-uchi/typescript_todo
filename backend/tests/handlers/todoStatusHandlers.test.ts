@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { prismaMock } from "../helpers/prismaMock";
 
 import {
+  createTodoStatusHandler,
   deleteTodoStatusHandler,
   listTodoStatusHandler,
   updateTodoStatusHandler,
@@ -75,6 +76,29 @@ describe("todoStatusHandlers", () => {
       expect(res.statusCode).toBe(204);
       expect(prismaMock.todoStatus.delete).toHaveBeenCalledWith({
         where: { id: 1 },
+      });
+    });
+  });
+
+  describe("createTodoStatusHandler", () => {
+    it("作成して JSON で返すこと", async () => {
+      const mockStatus = { id: 1, displayName: "TODO", priority: 1 };
+      prismaMock.todoStatus.count.mockResolvedValue(0);
+      prismaMock.todoStatus.create.mockResolvedValue(mockStatus);
+
+      const req = createRequest({
+        body: { displayName: "TODO", priority: 1 },
+      });
+      const res = createResponse();
+
+      await createTodoStatusHandler(req, res);
+
+      expect(res.statusCode).toBe(200);
+      expect(res._getJSONData()).toEqual({
+        todoStatus: mockStatus,
+      });
+      expect(prismaMock.todoStatus.create).toHaveBeenCalledWith({
+        data: { displayName: "TODO", priority: 1 },
       });
     });
   });

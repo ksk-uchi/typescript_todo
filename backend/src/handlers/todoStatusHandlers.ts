@@ -96,3 +96,37 @@ export const deleteTodoStatusHandler = async (req: Request, res: Response) => {
   });
   res.status(204).send();
 };
+
+export const createTodoStatusHandler = async (req: Request, res: Response) => {
+  const bodySchema = z
+    .object({
+      displayName: z.string(),
+      priority: z.number().int(),
+    })
+    .superRefine(async (data, ctx) => {
+      // priority が重複していないかチェック
+      const count = await prisma.todoStatus.count({
+        where: { priority: data.priority },
+      });
+
+      if (count > 0) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["priority"],
+          message: `Priority(${data.priority}) already exists`,
+        });
+      }
+    });
+  const result = await bodySchema.safeParseAsync(req.body);
+  if (!result.success) {
+    return res.status(400).send(z.flattenError(result.error));
+  }
+  const { displayName, priority } = result.data;
+  const todoStatus = await prisma.todoStatus.create({
+    data: { displayName, priority },
+  });
+  const response = {
+    todoStatus: createTodoStatusResponse(todoStatus),
+  };
+  res.json(response);
+};
