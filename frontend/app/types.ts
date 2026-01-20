@@ -20,3 +20,5 @@ export interface TodoStatus {
 export type UpdateTodoStatusDto = Partial<
   Pick<TodoStatus, "displayName" | "priority">
 >;
+
+export type CreateTodoStatusDto = Pick<TodoStatus, "displayName" | "priority">;

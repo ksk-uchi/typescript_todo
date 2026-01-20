@@ -8,7 +8,11 @@ import {
 import { useEffect, useState } from "react";
 import { todoStatusApi } from "../api/todoStatusApi";
 import TodoStatusTable from "../components/TodoStatusTable";
-import type { TodoStatus, UpdateTodoStatusDto } from "../types";
+import type {
+  CreateTodoStatusDto,
+  TodoStatus,
+  UpdateTodoStatusDto,
+} from "../types";
 
 export default function TodoStatusList() {
   const [statuses, setStatuses] = useState<TodoStatus[]>([]);
@@ -59,6 +63,20 @@ export default function TodoStatusList() {
     }
   };
 
+  const handleCreate = async (data: CreateTodoStatusDto) => {
+    try {
+      const newStatus = await todoStatusApi.create(data);
+      setStatuses((prevStatuses) => [...prevStatuses, newStatus]);
+    } catch (err: any) {
+      console.error("Create error:", err);
+      if (err.response?.data?.fieldErrors?.priority) {
+        alert(err.response.data.fieldErrors.priority[0]);
+      } else {
+        alert("ステータスの作成に失敗しました。");
+      }
+    }
+  };
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" mt={4}>
@@ -84,6 +102,7 @@ export default function TodoStatusList() {
         statuses={statuses}
         onUpdate={handleUpdate}
         onDelete={handleDelete}
+        onCreate={handleCreate}
       />
     </Container>
   );

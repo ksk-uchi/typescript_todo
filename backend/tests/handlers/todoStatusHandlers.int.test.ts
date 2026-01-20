@@ -1,4 +1,5 @@
 import {
+  createTodoStatusHandler,
   deleteTodoStatusHandler,
   listTodoStatusHandler,
   updateTodoStatusHandler,
@@ -111,6 +112,29 @@ describe("todoStatusHandlers Integration", () => {
     expect(responseData).toEqual({
       fieldErrors: {
         todoStatusId: [`TodoStatusId(${statuses[0].id}) is used by todo`],
+      },
+      formErrors: [],
+    });
+  });
+
+  it("todo ステータス作成で priority が重複する場合は 400 を返すこと", async () => {
+    await prisma.todoStatus.create({
+      data: { displayName: "TODO", priority: 1 },
+    });
+
+    const req = createRequest({
+      body: { displayName: "Pending", priority: 1 },
+    });
+    const res = createResponse();
+
+    await createTodoStatusHandler(req, res);
+
+    expect(res.statusCode).toBe(400);
+    const responseData = res._getData();
+
+    expect(responseData).toEqual({
+      fieldErrors: {
+        priority: ["Priority(1) already exists"],
       },
       formErrors: [],
     });

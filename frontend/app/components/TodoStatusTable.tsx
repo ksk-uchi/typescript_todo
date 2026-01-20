@@ -1,5 +1,7 @@
+import { Add as AddIcon } from "@mui/icons-material";
 import {
   Button,
+  IconButton,
   Paper,
   Table,
   TableBody,
@@ -8,25 +10,37 @@ import {
   TableHead,
   TableRow,
   TextField,
+  Tooltip,
 } from "@mui/material";
 import { useState } from "react";
-import type { TodoStatus, UpdateTodoStatusDto } from "../types";
+import type {
+  CreateTodoStatusDto,
+  TodoStatus,
+  UpdateTodoStatusDto,
+} from "../types";
 
 interface TodoStatusTableProps {
   statuses: TodoStatus[];
   onUpdate: (id: number, data: UpdateTodoStatusDto) => Promise<void>;
   onDelete: (id: number) => Promise<void>;
+  onCreate: (data: CreateTodoStatusDto) => Promise<void>;
 }
 
 export default function TodoStatusTable({
   statuses,
   onUpdate,
   onDelete,
+  onCreate,
 }: TodoStatusTableProps) {
   const [editFormData, setEditFormData] = useState<
     Record<number, UpdateTodoStatusDto>
   >({});
   const [deletingIds, setDeletingIds] = useState<Set<number>>(new Set());
+
+  const [isCreating, setIsCreating] = useState(false);
+  const [createFormData, setCreateFormData] = useState<
+    Partial<CreateTodoStatusDto>
+  >({});
 
   const handleEditClick = (status: TodoStatus) => {
     setEditFormData((prev) => ({
@@ -75,6 +89,45 @@ export default function TodoStatusTable({
         [field]: value,
       },
     }));
+  };
+
+  const handleCreateChange = (
+    field: keyof CreateTodoStatusDto,
+    value: string | number,
+  ) => {
+    setCreateFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleAddClick = () => {
+    setIsCreating(true);
+    setCreateFormData({});
+  };
+
+  const handleCreateSave = async () => {
+    const { displayName, priority } = createFormData;
+
+    if (!displayName || priority === undefined || priority === null) {
+      alert("ステータス名と優先度は必須です。");
+      return;
+    }
+
+    const isDuplicate = statuses.some((s) => s.priority === priority);
+    if (isDuplicate) {
+      alert(`Priority(${priority}) already exists`);
+      return;
+    }
+
+    await onCreate({ displayName, priority });
+    setIsCreating(false);
+    setCreateFormData({});
+  };
+
+  const handleCancelCreate = () => {
+    setIsCreating(false);
+    setCreateFormData({});
   };
 
   return (
@@ -169,6 +222,70 @@ export default function TodoStatusTable({
               </TableRow>
             );
           })}
+          {isCreating && (
+            <TableRow>
+              <TableCell>
+                <TextField
+                  value={createFormData.displayName || ""}
+                  onChange={(e) =>
+                    handleCreateChange("displayName", e.target.value)
+                  }
+                  variant="standard"
+                  size="small"
+                  fullWidth
+                  placeholder="ステータス名"
+                  autoFocus
+                />
+              </TableCell>
+              <TableCell>
+                <TextField
+                  value={createFormData.priority ?? ""}
+                  onChange={(e) =>
+                    handleCreateChange("priority", Number(e.target.value))
+                  }
+                  variant="standard"
+                  size="small"
+                  type="number"
+                  fullWidth
+                  placeholder="優先度"
+                />
+              </TableCell>
+              <TableCell>
+                <Button
+                  variant="contained"
+                  onClick={handleCreateSave}
+                  size="small"
+                  sx={{ mr: 1 }}
+                >
+                  保存
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="inherit"
+                  onClick={handleCancelCreate}
+                  size="small"
+                >
+                  キャンセル
+                </Button>
+              </TableCell>
+            </TableRow>
+          )}
+
+          <TableRow>
+            <TableCell colSpan={3} align="center">
+              <Tooltip title="新しいステータスを追加">
+                <span>
+                  <IconButton
+                    color="primary"
+                    onClick={handleAddClick}
+                    disabled={isCreating}
+                  >
+                    <AddIcon />
+                  </IconButton>
+                </span>
+              </Tooltip>
+            </TableCell>
+          </TableRow>
         </TableBody>
       </Table>
     </TableContainer>
