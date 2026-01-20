@@ -2,7 +2,10 @@ import { createRequest, createResponse } from "node-mocks-http";
 import { describe, expect, it } from "vitest";
 import { prismaMock } from "../helpers/prismaMock";
 
-import { listTodoStatusHandler } from "@/handlers/todoStatusHandlers";
+import {
+  listTodoStatusHandler,
+  updateTodoStatusHandler,
+} from "@/handlers/todoStatusHandlers";
 
 describe("todoStatusHandlers", () => {
   describe("listTodoStatusHandler", () => {
@@ -28,6 +31,31 @@ describe("todoStatusHandlers", () => {
         orderBy: {
           priority: "asc",
         },
+      });
+    });
+  });
+
+  describe("updateTodoStatusHandler", () => {
+    it("更新して JSON で返すこと", async () => {
+      const mockStatus = { id: 1, displayName: "TODO", priority: 1 };
+      prismaMock.todoStatus.count.mockResolvedValue(0);
+      prismaMock.todoStatus.update.mockResolvedValue(mockStatus);
+
+      const req = createRequest({
+        params: { todoStatusId: 1 },
+        body: { displayName: "TODO", priority: 1 },
+      });
+      const res = createResponse();
+
+      await updateTodoStatusHandler(req, res);
+
+      expect(res.statusCode).toBe(200);
+      expect(res._getJSONData()).toEqual({
+        todoStatus: mockStatus,
+      });
+      expect(prismaMock.todoStatus.update).toHaveBeenCalledWith({
+        where: { id: 1 },
+        data: { displayName: "TODO", priority: 1 },
       });
     });
   });

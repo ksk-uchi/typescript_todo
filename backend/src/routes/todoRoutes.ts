@@ -5,7 +5,10 @@ import {
   listTodoHandler,
   updateTodoHandler,
 } from "@/handlers/todoHandlers";
-import { listTodoStatusHandler } from "@/handlers/todoStatusHandlers";
+import {
+  listTodoStatusHandler,
+  updateTodoStatusHandler,
+} from "@/handlers/todoStatusHandlers";
 import { Express, NextFunction, Request, Response, Router } from "express";
 
 export const allowOrigin = (
@@ -36,4 +39,5 @@ export const setTodoRoutes = (app: Express) => {
   const todoStatusRouter = Router();
   app.use("/todo_status", todoStatusRouter);
   todoStatusRouter.get("/", listTodoStatusHandler);
+  todoStatusRouter.patch("/:todoStatusId", updateTodoStatusHandler);
 };

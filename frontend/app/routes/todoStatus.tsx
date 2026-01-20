@@ -1,8 +1,14 @@
-import { Alert, Box, CircularProgress, Container, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
-import { todoStatusApi } from '../api/todoStatusApi';
-import TodoStatusTable from '../components/TodoStatusTable';
-import type { TodoStatus } from '../types';
+import {
+  Alert,
+  Box,
+  CircularProgress,
+  Container,
+  Typography,
+} from "@mui/material";
+import { useEffect, useState } from "react";
+import { todoStatusApi } from "../api/todoStatusApi";
+import TodoStatusTable from "../components/TodoStatusTable";
+import type { TodoStatus, UpdateTodoStatusDto } from "../types";
 
 export default function TodoStatusList() {
   const [statuses, setStatuses] = useState<TodoStatus[]>([]);
@@ -15,8 +21,8 @@ export default function TodoStatusList() {
         const data = await todoStatusApi.getAll();
         setStatuses(data);
       } catch (err) {
-        console.error('Fetch error:', err);
-        setError('ステータス一覧の取得に失敗しました。');
+        console.error("Fetch error:", err);
+        setError("ステータス一覧の取得に失敗しました。");
       } finally {
         setLoading(false);
       }
@@ -24,6 +30,21 @@ export default function TodoStatusList() {
 
     fetchStatuses();
   }, []);
+
+  const handleUpdate = async (id: number, data: UpdateTodoStatusDto) => {
+    try {
+      const updatedStatus = await todoStatusApi.update(id, data);
+      setStatuses((prevStatuses) =>
+        prevStatuses.map((status) =>
+          status.id === id ? updatedStatus : status,
+        ),
+      );
+    } catch (err) {
+      console.error("Update error:", err);
+      // Optionally set an error state here or show a notification
+      alert("ステータスの更新に失敗しました。");
+    }
+  };
 
   if (loading) {
     return (
@@ -46,7 +67,7 @@ export default function TodoStatusList() {
       <Typography variant="h4" component="h1" gutterBottom>
         ステータス一覧
       </Typography>
-      <TodoStatusTable statuses={statuses} />
+      <TodoStatusTable statuses={statuses} onUpdate={handleUpdate} />
     </Container>
   );
 }
