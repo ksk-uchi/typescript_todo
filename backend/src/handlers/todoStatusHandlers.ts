@@ -89,7 +89,7 @@ export const deleteTodoStatusHandler = async (req: Request, res: Response) => {
     });
   const result = await paramSchema.safeParseAsync(req.params);
   if (!result.success) {
-    return res.status(400).send("Invalid todoStatusId");
+    return res.status(400).send(z.flattenError(result.error));
   }
   await prisma.todoStatus.delete({
     where: { id: result.data.todoStatusId },
