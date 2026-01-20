@@ -23,4 +23,7 @@ export const todoStatusApi = {
     );
     return response.data.todoStatus;
   },
+  delete: async (id: number): Promise<void> => {
+    await axios.delete(`${BASE_URL}/${id}`);
+  },
 };

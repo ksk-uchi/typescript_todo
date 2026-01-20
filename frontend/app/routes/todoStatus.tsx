@@ -46,6 +46,19 @@ export default function TodoStatusList() {
     }
   };
 
+  const handleDelete = async (id: number) => {
+    try {
+      await todoStatusApi.delete(id);
+      setStatuses((prevStatuses) =>
+        prevStatuses.filter((status) => status.id !== id),
+      );
+    } catch (err) {
+      console.error("Delete error:", err);
+      alert("ステータスの削除に失敗しました。");
+      throw err; // Re-throw to let Table know functionality failed
+    }
+  };
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" mt={4}>
@@ -67,7 +80,11 @@ export default function TodoStatusList() {
       <Typography variant="h4" component="h1" gutterBottom>
         ステータス一覧
       </Typography>
-      <TodoStatusTable statuses={statuses} onUpdate={handleUpdate} />
+      <TodoStatusTable
+        statuses={statuses}
+        onUpdate={handleUpdate}
+        onDelete={handleDelete}
+      />
     </Container>
   );
 }
