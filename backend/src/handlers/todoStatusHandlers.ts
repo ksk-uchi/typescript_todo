@@ -1,47 +1,47 @@
-import { Prisma } from "@/generated/prisma/client";
+import { NotFoundError, ValidationError } from "@/errors/clientSideError";
+import {
+  TodoStatusCreateService,
+  TodoStatusDeleteService,
+  TodoStatusListService,
+  TodoStatusUpdateService,
+} from "@/services/todoStatus/todoStatusServices";
 import { prisma } from "@/utils/prisma";
 import { Request, Response } from "express";
 import { z } from "zod";
 
-type TodoStatusResponse = {
-  id: number;
-  displayName: string;
-  priority: number;
-};
-
-function createTodoStatusResponse(
-  todoStatus: Prisma.TodoStatusGetPayload<object>,
-): TodoStatusResponse {
-  return {
-    id: todoStatus.id,
-    displayName: todoStatus.displayName,
-    priority: todoStatus.priority,
-  };
-}
-
 export const listTodoStatusHandler = async (req: Request, res: Response) => {
-  const rows = await prisma.todoStatus.findMany({
-    orderBy: {
-      priority: "asc",
-    },
+  const todoStatusListService = new TodoStatusListService();
+  const rows = await todoStatusListService.getData();
+  res.json({
+    todoStatus: rows,
   });
-  const response = {
-    todoStatus: rows.map(createTodoStatusResponse),
-  };
-  res.json(response);
 };
 
 export const updateTodoStatusHandler = async (req: Request, res: Response) => {
   const paramSchema = z.object({
     todoStatusId: z.coerce.number().int(),
   });
-  const { todoStatusId } = paramSchema.parse(req.params);
+  const paramParseResult = paramSchema.safeParse(req.params);
+  if (!paramParseResult.success) {
+    throw new ValidationError("", paramParseResult.error);
+  }
+  const { todoStatusId } = paramParseResult.data;
+  const todoStatusCount = await prisma.todoStatus.count({
+    where: { id: todoStatusId },
+  });
+  if (todoStatusCount === 0) {
+    throw new NotFoundError(`TodoStatus(${todoStatusId}) not found`);
+  }
+
   const bodySchema = z.object({
     displayName: z.string().optional(),
     priority: z.number().int().optional(),
   });
-
-  const { displayName, priority } = bodySchema.parse(req.body);
+  const bodyParseResult = bodySchema.safeParse(req.body);
+  if (!bodyParseResult.success) {
+    throw new ValidationError("", bodyParseResult.error);
+  }
+  const { displayName, priority } = bodyParseResult.data;
   if (priority !== undefined) {
     const samePriorityTodoStatusCount = await prisma.todoStatus.count({
       where: {
@@ -52,18 +52,18 @@ export const updateTodoStatusHandler = async (req: Request, res: Response) => {
       },
     });
     if (samePriorityTodoStatusCount > 0) {
-      return res.status(400).send(`Priority(${priority}) already exists`);
+      throw new ValidationError("", {
+        priority: `Same priority(${priority}) already exists`,
+      });
     }
   }
 
-  const todoStatus = await prisma.todoStatus.update({
-    where: { id: todoStatusId },
-    data: { displayName, priority },
+  const todoStatusUpdateService = new TodoStatusUpdateService(todoStatusId, {
+    displayName,
+    priority,
   });
-  const response = {
-    todoStatus: createTodoStatusResponse(todoStatus),
-  };
-  res.json(response);
+  const todoStatus = await todoStatusUpdateService.getData();
+  res.json(todoStatus);
 };
 
 export const deleteTodoStatusHandler = async (req: Request, res: Response) => {
@@ -80,8 +80,9 @@ export const deleteTodoStatusHandler = async (req: Request, res: Response) => {
 
         if (count > 0) {
           ctx.addIssue({
-            code: "custom",
+            code: "invalid_value",
             path: ["todoStatusId"],
+            values: [],
             message: `TodoStatusId(${data.todoStatusId}) is used by todo`,
           });
         }
@@ -89,11 +90,13 @@ export const deleteTodoStatusHandler = async (req: Request, res: Response) => {
     });
   const result = await paramSchema.safeParseAsync(req.params);
   if (!result.success) {
-    return res.status(400).send(z.flattenError(result.error));
+    throw new ValidationError("", result.error);
   }
-  await prisma.todoStatus.delete({
-    where: { id: result.data.todoStatusId },
-  });
+
+  const todoStatusDeleteService = new TodoStatusDeleteService(
+    result.data.todoStatusId,
+  );
+  await todoStatusDeleteService.delete();
   res.status(204).send();
 };
 
@@ -108,25 +111,21 @@ export const createTodoStatusHandler = async (req: Request, res: Response) => {
       const count = await prisma.todoStatus.count({
         where: { priority: data.priority },
       });
-
       if (count > 0) {
         ctx.addIssue({
-          code: "custom",
+          code: "invalid_value",
           path: ["priority"],
+          values: [],
           message: `Priority(${data.priority}) already exists`,
         });
       }
     });
   const result = await bodySchema.safeParseAsync(req.body);
   if (!result.success) {
-    return res.status(400).send(z.flattenError(result.error));
+    throw new ValidationError("", result.error);
   }
-  const { displayName, priority } = result.data;
-  const todoStatus = await prisma.todoStatus.create({
-    data: { displayName, priority },
-  });
-  const response = {
-    todoStatus: createTodoStatusResponse(todoStatus),
-  };
-  res.json(response);
+
+  const todoStatusCreateService = new TodoStatusCreateService(result.data);
+  const todoStatus = await todoStatusCreateService.getData();
+  res.json(todoStatus);
 };
