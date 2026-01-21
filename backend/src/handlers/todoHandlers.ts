@@ -1,57 +1,40 @@
+import { NotFoundError, ValidationError } from "@/errors/clientSideError";
 import { Prisma } from "@/generated/prisma/client";
+import {
+  TodoCreateService,
+  TodoDeleteService,
+  TodoDetailService,
+  TodoListService,
+  TodoUpdateService,
+} from "@/services/todo/todoServices";
 import { prisma } from "@/utils/prisma";
 import { Request, Response } from "express";
 import { z } from "zod";
 
-type TodoResponse = {
-  id: number;
-  title: string;
-  description: string | null;
-  statusId: number;
-  createdAt: Date;
-};
-
-function createTodoResponse(todo: Prisma.TodoGetPayload<object>): TodoResponse {
-  return {
-    id: todo.id,
-    title: todo.title,
-    description: todo.description,
-    statusId: todo.todoStatusId,
-    createdAt: todo.createdAt,
-  };
-}
-
 export const listTodoHandler = async (req: Request, res: Response) => {
-  const rows = await prisma.todo.findMany();
-  const response = {
-    todo: rows.map(createTodoResponse),
-  };
-  res.json(response);
+  const service = new TodoListService();
+  res.json({
+    todo: await service.getData(),
+  });
 };
 
 export const detailTodoHandler = async (req: Request, res: Response) => {
   const schema = z.object({
     todoId: z.coerce.number<string>(),
   });
-
   const result = schema.safeParse(req.params);
   if (!result.success) {
-    return res.status(400).json({
-      errorMsg: z.flattenError(result.error),
-    });
+    throw new ValidationError("", result.error);
   }
-
   const { todoId } = result.data;
-  const todo = await prisma.todo.findUnique({
-    where: {
-      id: todoId,
-    },
-  });
+
+  const service = new TodoDetailService(todoId);
+  const todo = await service.getData();
   if (!todo) {
-    return res.status(404).send();
+    throw new NotFoundError(`Todo(${todoId}) not found`);
   }
 
-  res.json(createTodoResponse(todo));
+  res.json(todo);
 };
 
 export const createTodoHandler = async (req: Request, res: Response) => {
@@ -70,49 +53,32 @@ export const createTodoHandler = async (req: Request, res: Response) => {
 
         if (count === 0) {
           ctx.addIssue({
-            code: "custom",
-            path: ["statusId"], // エラーを出すフィールドを指定
-            message: `Invalid statusId(${data.statusId})`,
+            code: "invalid_value",
+            path: ["statusId"],
+            values: [],
           });
         }
       }
     });
-
   const result = await schema.safeParseAsync(req.body);
   if (!result.success) {
-    return res.status(400).json({
-      errorMsg: z.flattenError(result.error),
-    });
+    throw new ValidationError("", result.error);
   }
-  const { title, description, statusId } = await schema.parseAsync(req.body);
 
-  const todo = await prisma.todo.create({
-    data: {
-      title: title,
-      description: description,
-      status: {
-        connect: {
-          id: statusId,
-        },
-      },
-    },
-  });
+  const service = new TodoCreateService(result.data);
+  const todo = await service.getData();
 
-  res.status(201).json(createTodoResponse(todo));
+  res.status(201).json(todo);
 };
 
 export const updateTodoHandler = async (req: Request, res: Response) => {
   const paramSchema = z.object({
     todoId: z.coerce.number<string>(),
   });
-
   const paramResult = paramSchema.safeParse(req.params);
   if (!paramResult.success) {
-    return res.status(400).json({
-      errorMsg: z.flattenError(paramResult.error),
-    });
+    throw new ValidationError("", paramResult.error);
   }
-
   const { todoId } = paramResult.data;
   const todo = await prisma.todo.findUnique({
     where: {
@@ -120,7 +86,7 @@ export const updateTodoHandler = async (req: Request, res: Response) => {
     },
   });
   if (!todo) {
-    return res.status(404).send();
+    throw new NotFoundError(`Todo(${todoId}) not found`);
   }
 
   const reqSchema = z
@@ -137,34 +103,24 @@ export const updateTodoHandler = async (req: Request, res: Response) => {
 
         if (count === 0) {
           ctx.addIssue({
-            code: "custom",
+            code: "invalid_value",
             path: ["statusId"],
-            message: `Invalid statusId(${data.statusId})`,
+            values: [],
           });
         }
       }
     });
-
   const reqResult = await reqSchema.safeParseAsync(req.body);
   if (!reqResult.success) {
-    return res.status(400).json({
-      errorMsg: z.flattenError(reqResult.error),
-    });
+    throw new ValidationError("", reqResult.error);
   }
-  const { title, description, statusId } = reqResult.data;
 
   try {
-    const updatedTodo = await prisma.todo.update({
-      where: { id: todo.id },
-      data: {
-        title: title,
-        description: description,
-        todoStatusId: statusId,
-      },
-    });
-    res.json(createTodoResponse(updatedTodo));
+    const service = new TodoUpdateService(todoId, reqResult.data);
+    const updatedTodo = await service.getData();
+    res.json(updatedTodo);
   } catch {
-    return res.status(500).send("Update failed.");
+    throw new Error("Update failed.");
   }
 };
 
@@ -172,28 +128,23 @@ export const deleteTodoHandler = async (req: Request, res: Response) => {
   const paramSchema = z.object({
     todoId: z.coerce.number<string>(),
   });
-
   const paramResult = paramSchema.safeParse(req.params);
   if (!paramResult.success) {
-    return res.status(400).json({
-      errorMsg: z.flattenError(paramResult.error),
-    });
+    throw new ValidationError("", paramResult.error);
   }
-
   const { todoId } = paramResult.data;
+
   try {
-    await prisma.todo.delete({
-      where: {
-        id: todoId,
-      },
-    });
+    const service = new TodoDeleteService(todoId);
+    await service.delete();
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      // 削除対象が存在しない
       if (err.code === "P2025") {
-        return res.status(404).send();
+        throw new NotFoundError(`Todo(${todoId}) not found`);
       }
     }
-    return res.status(500).send("Delete failed.");
+    throw new Error("Delete failed.");
   }
   res.status(200).send();
 };

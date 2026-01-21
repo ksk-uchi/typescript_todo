@@ -21,18 +21,15 @@ export const todoStatusApi = {
     return response.data.todoStatus.sort((a, b) => a.priority - b.priority);
   },
   create: async (data: CreateTodoStatusDto): Promise<TodoStatus> => {
-    const response = await api.post<{ todoStatus: TodoStatus }>("/", data);
-    return response.data.todoStatus;
+    const response = await api.post<TodoStatus>("/", data);
+    return response.data;
   },
   update: async (
     id: number,
     data: UpdateTodoStatusDto,
   ): Promise<TodoStatus> => {
-    const response = await api.patch<{ todoStatus: TodoStatus }>(
-      `/${id}`,
-      data,
-    );
-    return response.data.todoStatus;
+    const response = await api.patch<TodoStatus>(`/${id}`, data);
+    return response.data;
   },
   delete: async (id: number): Promise<void> => {
     await api.delete(`/${id}`);
