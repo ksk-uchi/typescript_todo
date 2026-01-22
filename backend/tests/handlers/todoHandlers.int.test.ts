@@ -42,8 +42,50 @@ describe("todoHandlers Integration", () => {
         title: todo.title,
         description: todo.description,
         createdAt: todo.createdAt.toISOString(),
+        done_at: null,
       })),
     });
+  });
+
+  it("[GET /todo] 完了済みの todo はデフォルトで取得されないこと", async () => {
+    await prisma.todo.createMany({
+      data: [
+        {
+          title: "active todo",
+          done_at: null,
+        },
+        {
+          title: "done todo",
+          done_at: new Date(),
+        },
+      ],
+    });
+
+    const response = await request(app).get("/todo");
+
+    expect(response.status).toBe(200);
+    expect(response.body.todo).toHaveLength(1);
+    expect(response.body.todo[0].title).toBe("active todo");
+  });
+
+  it("[GET /todo] include_done=true で完了済みの todo も取得できること", async () => {
+    await prisma.todo.createMany({
+      data: [
+        {
+          title: "active todo",
+          done_at: null,
+        },
+        {
+          title: "done todo",
+          done_at: new Date(),
+        },
+      ],
+    });
+
+    const response = await request(app).get("/todo?include_done=true");
+
+    expect(response.status).toBe(200);
+    expect(response.body.todo).toHaveLength(2);
   });
 
   it("[GET /todo/:id] todo を1件取得できること", async () => {
@@ -62,6 +104,7 @@ describe("todoHandlers Integration", () => {
       title: todo.title,
       description: todo.description,
       createdAt: todo.createdAt.toISOString(),
+      done_at: null,
     });
   });
 
@@ -101,6 +144,7 @@ describe("todoHandlers Integration", () => {
       title: "test title",
       description: null,
       createdAt: expect.any(Date),
+      done_at: null,
     });
   });
 
@@ -131,6 +175,7 @@ describe("todoHandlers Integration", () => {
     expect(response.body).toEqual({
       ...expectedTodo,
       createdAt: todo.createdAt.toISOString(),
+      done_at: null,
     });
 
     const updatedTodo = await prisma.todo.findUnique({
@@ -139,6 +184,7 @@ describe("todoHandlers Integration", () => {
     expect(updatedTodo).toEqual({
       ...expectedTodo,
       createdAt: todo.createdAt,
+      done_at: null,
     });
   });
 
@@ -201,5 +247,50 @@ describe("todoHandlers Integration", () => {
         todoId: "invalid_type",
       },
     });
+  });
+
+  it("[PUT /todo/done/:id] todo を完了状態にできること", async () => {
+    const todo = await prisma.todo.create({
+      data: {
+        title: "test title",
+      },
+    });
+
+    const response = await request(app)
+      .put(`/todo/done/${todo.id}`)
+      .send({ is_done: true });
+
+    expect(response.status).toBe(200);
+    expect(response.body.done_at).not.toBeNull();
+  });
+
+  it("[PUT /todo/done/:id] todo を未完了状態に戻せること", async () => {
+    const todo = await prisma.todo.create({
+      data: {
+        title: "test title",
+        done_at: new Date(),
+      },
+    });
+
+    const response = await request(app)
+      .put(`/todo/done/${todo.id}`)
+      .send({ is_done: false });
+
+    expect(response.status).toBe(200);
+    expect(response.body.done_at).toBeNull();
+  });
+
+  it("[PUT /todo/done/:id] バリデーションエラーが返ること", async () => {
+    const todo = await prisma.todo.create({
+      data: {
+        title: "test title",
+      },
+    });
+
+    const response = await request(app)
+      .put(`/todo/done/${todo.id}`)
+      .send({ is_done: "invalid" });
+
+    expect(response.status).toBe(422);
   });
 });
