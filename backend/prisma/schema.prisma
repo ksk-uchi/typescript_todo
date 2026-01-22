@@ -13,14 +13,7 @@ datasource db {
   provider = "mysql"
 }
 
-model TodoStatus {
-  id          Int    @id @default(autoincrement())
-  displayName String @map("display_name")
-  priority    Int    @unique
 
-
-  @@map("todo_status")
-}
 
 model Todo {
   id           Int        @id @default(autoincrement())
