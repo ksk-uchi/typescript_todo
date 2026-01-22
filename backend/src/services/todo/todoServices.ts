@@ -18,11 +18,15 @@ function createTodoRecord(todo: Prisma.TodoGetPayload<object>): TodoRecord {
   };
 }
 
+export interface ITodoListService {
+  includeDone?: boolean;
+}
+
 export class TodoListService {
   private includeDone: boolean;
 
-  constructor(options?: { includeDone?: boolean }) {
-    this.includeDone = options?.includeDone ?? false;
+  constructor({ includeDone }: ITodoListService = {}) {
+    this.includeDone = includeDone ?? false;
   }
 
   async getData(): Promise<TodoRecord[]> {
