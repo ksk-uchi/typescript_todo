@@ -58,9 +58,6 @@ export function Header() {
             }}
           >
             <MenuItem onClick={() => handleNavigate("/")}>Todo List</MenuItem>
-            <MenuItem onClick={() => handleNavigate("/todo_status")}>
-              Todo Status List
-            </MenuItem>
           </Menu>
         </Toolbar>
       </AppBar>
