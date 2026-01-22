@@ -1,5 +1,12 @@
 import AddIcon from "@mui/icons-material/Add";
-import { Box, Container, Fab, Typography } from "@mui/material";
+import {
+  Box,
+  Checkbox,
+  Container,
+  Fab,
+  FormControlLabel,
+  Typography,
+} from "@mui/material";
 import { useEffect, useState } from "react";
 import { todoApi } from "../api/todoApi";
 import TodoList from "../components/TodoList";
@@ -18,10 +25,11 @@ export default function Home() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [selectedTodo, setSelectedTodo] = useState<Todo | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [hideDone, setHideDone] = useState(true);
 
   const fetchTodos = async () => {
     try {
-      const data = await todoApi.getAll();
+      const data = await todoApi.getAll(!hideDone);
       setTodos(data);
     } catch (error) {
       console.error("Failed to fetch todos", error);
@@ -30,7 +38,7 @@ export default function Home() {
 
   useEffect(() => {
     fetchTodos();
-  }, []);
+  }, [hideDone]);
 
   const handleCreate = async (data: CreateTodoDto) => {
     try {
@@ -47,6 +55,16 @@ export default function Home() {
       setTodos(todos.map((t) => (t.id === id ? updatedTodo : t)));
     } catch (error) {
       console.error("Failed to update todo", error);
+    }
+  };
+
+  const handleToggleStatus = async (id: number, is_done: boolean) => {
+    try {
+      const updatedTodo = await todoApi.updateDoneStatus(id, is_done);
+      // Update local state without refetching to keep the item visible if hiding completed
+      setTodos(todos.map((t) => (t.id === id ? updatedTodo : t)));
+    } catch (error) {
+      console.error("Failed to update todo status", error);
     }
   };
 
@@ -84,7 +102,24 @@ export default function Home() {
         Todo List
       </Typography>
 
-      <TodoList todos={todos} onEdit={openModal} onDelete={handleDelete} />
+      <Box sx={{ mb: 2, display: "flex", justifyContent: "flex-end" }}>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={hideDone}
+              onChange={(e) => setHideDone(e.target.checked)}
+            />
+          }
+          label="Hide completed"
+        />
+      </Box>
+
+      <TodoList
+        todos={todos}
+        onEdit={openModal}
+        onDelete={handleDelete}
+        onToggleStatus={handleToggleStatus}
+      />
 
       <Box sx={{ position: "fixed", bottom: 32, right: 32 }}>
         <Fab color="primary" aria-label="add" onClick={() => openModal(null)}>
