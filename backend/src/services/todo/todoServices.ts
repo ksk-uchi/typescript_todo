@@ -6,6 +6,7 @@ type TodoRecord = {
   title: string;
   description: string | null;
   createdAt: Date;
+  done_at: Date | null;
 };
 function createTodoRecord(todo: Prisma.TodoGetPayload<object>): TodoRecord {
   return {
@@ -13,13 +14,19 @@ function createTodoRecord(todo: Prisma.TodoGetPayload<object>): TodoRecord {
     title: todo.title,
     description: todo.description,
     createdAt: todo.createdAt,
+    done_at: todo.done_at,
   };
 }
 
 export class TodoListService {
   constructor() {}
-  async getData(): Promise<TodoRecord[]> {
-    const todoList = await prisma.todo.findMany();
+  async getData(includeDone: boolean = false): Promise<TodoRecord[]> {
+    const whereClause: Prisma.TodoWhereInput = includeDone
+      ? {}
+      : { done_at: null };
+    const todoList = await prisma.todo.findMany({
+      where: whereClause,
+    });
     return todoList.map(createTodoRecord);
   }
 }
@@ -113,5 +120,33 @@ export class TodoDeleteService {
         id: this.todoId,
       },
     });
+  }
+}
+
+export class TodoDoneService {
+  private todoId: number;
+  private isDone: boolean;
+
+  constructor(todoId: number, isDone: boolean) {
+    this.todoId = todoId;
+    this.isDone = isDone;
+  }
+
+  async update(): Promise<Prisma.TodoGetPayload<object>> {
+    const data: Prisma.TodoUpdateInput = {
+      done_at: this.isDone ? new Date() : null,
+    };
+    const todo = await prisma.todo.update({
+      where: {
+        id: this.todoId,
+      },
+      data,
+    });
+    return todo;
+  }
+
+  async getData(): Promise<TodoRecord> {
+    const todo = await this.update();
+    return createTodoRecord(todo);
   }
 }
