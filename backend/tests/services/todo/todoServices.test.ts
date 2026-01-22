@@ -17,7 +17,6 @@ describe("todoServices", () => {
           id: 1,
           title: "Task 1",
           description: null,
-          todoStatusId: 1,
           createdAt: new Date(),
         },
       ];
@@ -32,7 +31,6 @@ describe("todoServices", () => {
           id: todo.id,
           title: todo.title,
           description: todo.description,
-          statusId: todo.todoStatusId,
           createdAt: todo.createdAt,
         })),
       );
@@ -44,7 +42,6 @@ describe("todoServices", () => {
         id: 1,
         title: "Task 1",
         description: null,
-        todoStatusId: 1,
         createdAt: new Date(),
       };
       prismaMock.todo.findUnique.mockResolvedValue(mockTodo);
@@ -57,7 +54,6 @@ describe("todoServices", () => {
         id: mockTodo.id,
         title: mockTodo.title,
         description: mockTodo.description,
-        statusId: mockTodo.todoStatusId,
         createdAt: mockTodo.createdAt,
       });
     });
@@ -68,14 +64,12 @@ describe("todoServices", () => {
         id: 1,
         title: "Task 1",
         description: null,
-        todoStatusId: 1,
         createdAt: new Date(),
       };
       prismaMock.todo.create.mockResolvedValue(mockTodo);
 
       const service = new TodoCreateService({
         title: "Task 1",
-        statusId: 1,
       });
       const todo = await service.getData();
 
@@ -84,7 +78,6 @@ describe("todoServices", () => {
         id: mockTodo.id,
         title: mockTodo.title,
         description: mockTodo.description,
-        statusId: mockTodo.todoStatusId,
         createdAt: mockTodo.createdAt,
       });
     });
@@ -95,14 +88,12 @@ describe("todoServices", () => {
         id: 1,
         title: "Task 1",
         description: null,
-        todoStatusId: 1,
         createdAt: new Date(),
       };
       prismaMock.todo.update.mockResolvedValue(mockTodo);
 
       const service = new TodoUpdateService(1, {
         title: "Task 1",
-        statusId: 1,
       });
       const todo = await service.getData();
 
@@ -111,7 +102,6 @@ describe("todoServices", () => {
         id: mockTodo.id,
         title: mockTodo.title,
         description: mockTodo.description,
-        statusId: mockTodo.todoStatusId,
         createdAt: mockTodo.createdAt,
       });
     });

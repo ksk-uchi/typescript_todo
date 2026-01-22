@@ -13,21 +13,13 @@ datasource db {
   provider = "mysql"
 }
 
-model TodoStatus {
-  id          Int    @id @default(autoincrement())
-  displayName String @map("display_name")
-  priority    Int    @unique
-  todos       Todo[]
 
-  @@map("todo_status")
-}
 
 model Todo {
   id           Int        @id @default(autoincrement())
   title        String
   description  String?    @db.VarChar(256)
-  status       TodoStatus @relation(fields: [todoStatusId], references: [id])
-  todoStatusId Int        @map("todo_status_id")
+
   createdAt   DateTime    @default(now()) @map("created_at")
 
   @@map("todo")

@@ -26,7 +26,6 @@ export default function TodoModal({
 }: TodoModalProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [statusId, setStatusId] = useState("");
 
   useEffect(() => {
     if (todo) {
@@ -39,12 +38,7 @@ export default function TodoModal({
   }, [todo, open]);
 
   const handleSave = () => {
-    const statusIdNumber = parseInt(statusId, 10);
-    if (isNaN(statusIdNumber)) {
-      return;
-    }
-
-    onSave({ title, description, statusId: statusIdNumber });
+    onSave({ title, description });
     onClose();
   };
 
@@ -68,12 +62,7 @@ export default function TodoModal({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
-        <TextField
-          label="statusId"
-          variant="outlined"
-          value={statusId}
-          onChange={(e) => setStatusId(e.target.value)}
-        />
+
         <TextField
           margin="dense"
           label="Description"

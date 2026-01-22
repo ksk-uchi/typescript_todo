@@ -38,28 +38,10 @@ export const detailTodoHandler = async (req: Request, res: Response) => {
 };
 
 export const createTodoHandler = async (req: Request, res: Response) => {
-  const schema = z
-    .object({
-      title: z.string().min(1),
-      description: z.string().optional(),
-      statusId: z.number().int().positive(),
-    })
-    .superRefine(async (data, ctx) => {
-      // statusId が存在する場合のみチェックを実行
-      if (data.statusId) {
-        const count = await prisma.todoStatus.count({
-          where: { id: data.statusId },
-        });
-
-        if (count === 0) {
-          ctx.addIssue({
-            code: "invalid_value",
-            path: ["statusId"],
-            values: [],
-          });
-        }
-      }
-    });
+  const schema = z.object({
+    title: z.string().min(1),
+    description: z.string().optional(),
+  });
   const result = await schema.safeParseAsync(req.body);
   if (!result.success) {
     throw new ValidationError("", result.error);
@@ -89,27 +71,10 @@ export const updateTodoHandler = async (req: Request, res: Response) => {
     throw new NotFoundError(`Todo(${todoId}) not found`);
   }
 
-  const reqSchema = z
-    .object({
-      title: z.string().optional(),
-      description: z.string().optional(),
-      statusId: z.number().int().positive().optional(),
-    })
-    .superRefine(async (data, ctx) => {
-      if (data.statusId) {
-        const count = await prisma.todoStatus.count({
-          where: { id: data.statusId },
-        });
-
-        if (count === 0) {
-          ctx.addIssue({
-            code: "invalid_value",
-            path: ["statusId"],
-            values: [],
-          });
-        }
-      }
-    });
+  const reqSchema = z.object({
+    title: z.string().optional(),
+    description: z.string().optional(),
+  });
   const reqResult = await reqSchema.safeParseAsync(req.body);
   if (!reqResult.success) {
     throw new ValidationError("", reqResult.error);
