@@ -38,7 +38,7 @@ export const todoApi = {
     await api.delete(`/${id}`);
   },
 
-  updateStatus: async (id: number, is_done: boolean): Promise<Todo> => {
+  updateDoneStatus: async (id: number, is_done: boolean): Promise<Todo> => {
     const response = await api.put<Todo>(`/done/${id}`, { is_done });
     return response.data;
   },

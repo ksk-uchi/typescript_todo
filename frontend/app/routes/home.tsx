@@ -60,7 +60,7 @@ export default function Home() {
 
   const handleToggleStatus = async (id: number, is_done: boolean) => {
     try {
-      const updatedTodo = await todoApi.updateStatus(id, is_done);
+      const updatedTodo = await todoApi.updateDoneStatus(id, is_done);
       // Update local state without refetching to keep the item visible if hiding completed
       setTodos(todos.map((t) => (t.id === id ? updatedTodo : t)));
     } catch (error) {
