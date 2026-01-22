@@ -262,6 +262,11 @@ describe("todoHandlers Integration", () => {
 
     expect(response.status).toBe(200);
     expect(response.body.done_at).not.toBeNull();
+
+    const updatedTodo = await prisma.todo.findUnique({
+      where: { id: todo.id },
+    });
+    expect(updatedTodo?.done_at).not.toBeNull();
   });
 
   it("[PUT /todo/done/:id] todo を未完了状態に戻せること", async () => {
@@ -278,6 +283,11 @@ describe("todoHandlers Integration", () => {
 
     expect(response.status).toBe(200);
     expect(response.body.done_at).toBeNull();
+
+    const updatedTodo = await prisma.todo.findUnique({
+      where: { id: todo.id },
+    });
+    expect(updatedTodo?.done_at).toBeNull();
   });
 
   it("[PUT /todo/done/:id] バリデーションエラーが返ること", async () => {
