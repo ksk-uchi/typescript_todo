@@ -17,25 +17,15 @@ describe("todoHandlers Integration", () => {
   });
 
   it("[GET /todo] todo を一覧取得できること", async () => {
-    await prisma.todoStatus.createMany({
-      data: [
-        { displayName: "Done", priority: 0 },
-        { displayName: "InProgress", priority: 1 },
-      ],
-    });
-    const statuses = await prisma.todoStatus.findMany();
-
     await prisma.todo.createMany({
       data: [
         {
           title: "test title",
           description: "test description",
-          todoStatusId: statuses[0].id,
         },
         {
           title: "test title",
           description: "test description",
-          todoStatusId: statuses[1].id,
         },
       ],
     });
@@ -51,22 +41,16 @@ describe("todoHandlers Integration", () => {
         id: todo.id,
         title: todo.title,
         description: todo.description,
-        statusId: todo.todoStatusId,
         createdAt: todo.createdAt.toISOString(),
       })),
     });
   });
 
   it("[GET /todo/:id] todo を1件取得できること", async () => {
-    const status = await prisma.todoStatus.create({
-      data: { displayName: "Done", priority: 0 },
-    });
-
     const todo = await prisma.todo.create({
       data: {
         title: "test title",
         description: "test description",
-        todoStatusId: status.id,
       },
     });
 
@@ -76,8 +60,8 @@ describe("todoHandlers Integration", () => {
     expect(response.body).toEqual({
       id: todo.id,
       title: todo.title,
+
       description: todo.description,
-      statusId: todo.todoStatusId,
       createdAt: todo.createdAt.toISOString(),
     });
   });
@@ -104,13 +88,9 @@ describe("todoHandlers Integration", () => {
   });
 
   it("[POST /todo] todo を作成できること", async () => {
-    const status = await prisma.todoStatus.create({
-      data: { displayName: "Done", priority: 0 },
-    });
-
     const response = await request(app)
       .post("/todo")
-      .send({ title: "test title", statusId: status.id });
+      .send({ title: "test title" });
 
     expect(response.status).toBe(201);
     const createdTodo = await prisma.todo.findUnique({
@@ -121,50 +101,21 @@ describe("todoHandlers Integration", () => {
       id: response.body.id,
       title: "test title",
       description: null,
-      todoStatusId: status.id,
       createdAt: expect.any(Date),
     });
   });
 
-  it("[POST /todo] 存在しないステータスで todo が作成できないこと", async () => {
-    const status = await prisma.todoStatus.create({
-      data: { displayName: "Done", priority: 0 },
-    });
-
-    const response = await request(app)
-      .post("/todo")
-      .send({ title: "test title", statusId: status.id + 1 });
-
-    expect(response.status).toBe(422);
-    expect(response.body).toEqual({
-      message: "",
-      targets: {
-        statusId: "invalid_value",
-      },
-    });
-  });
-
   it("[PATCH /todo/:id] todo を更新できること", async () => {
-    await prisma.todoStatus.createMany({
-      data: [
-        { displayName: "Done", priority: 0 },
-        { displayName: "InProgress", priority: 1 },
-      ],
-    });
-    const statuses = await prisma.todoStatus.findMany();
-
     const todo = await prisma.todo.create({
       data: {
         title: "test title",
         description: "test description",
-        todoStatusId: statuses[0].id,
       },
     });
 
     const requestBody = {
       title: "new title",
       description: "new description",
-      statusId: statuses[1].id,
     };
 
     const response = await request(app)
@@ -180,7 +131,6 @@ describe("todoHandlers Integration", () => {
     };
     expect(response.body).toEqual({
       ...expectedTodo,
-      statusId: requestBody.statusId,
       createdAt: todo.createdAt.toISOString(),
     });
 
@@ -189,7 +139,6 @@ describe("todoHandlers Integration", () => {
     });
     expect(updatedTodo).toEqual({
       ...expectedTodo,
-      todoStatusId: requestBody.statusId,
       createdAt: todo.createdAt,
     });
   });
@@ -215,48 +164,11 @@ describe("todoHandlers Integration", () => {
     });
   });
 
-  it("[PATCH /todo/:id] 存在しないステータスで todo が更新できないこと", async () => {
-    const status = await prisma.todoStatus.create({
-      data: { displayName: "Done", priority: 0 },
-    });
-
-    const todo = await prisma.todo.create({
-      data: {
-        title: "test title",
-        description: "test description",
-        todoStatusId: status.id,
-      },
-    });
-
-    const requestBody = {
-      title: "new title",
-      description: "new description",
-      statusId: status.id + 1,
-    };
-
-    const response = await request(app)
-      .patch(`/todo/${todo.id}`)
-      .send(requestBody);
-
-    expect(response.status).toBe(422);
-    expect(response.body).toEqual({
-      message: "",
-      targets: {
-        statusId: "invalid_value",
-      },
-    });
-  });
-
   it("[DELETE /todo/:id] todo が削除できること", async () => {
-    const status = await prisma.todoStatus.create({
-      data: { displayName: "Done", priority: 0 },
-    });
-
     const todo = await prisma.todo.create({
       data: {
         title: "test title",
         description: "test description",
-        todoStatusId: status.id,
       },
     });
 

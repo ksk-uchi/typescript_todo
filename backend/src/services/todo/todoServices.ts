@@ -5,7 +5,6 @@ type TodoRecord = {
   id: number;
   title: string;
   description: string | null;
-  statusId: number;
   createdAt: Date;
 };
 function createTodoRecord(todo: Prisma.TodoGetPayload<object>): TodoRecord {
@@ -13,7 +12,6 @@ function createTodoRecord(todo: Prisma.TodoGetPayload<object>): TodoRecord {
     id: todo.id,
     title: todo.title,
     description: todo.description,
-    statusId: todo.todoStatusId,
     createdAt: todo.createdAt,
   };
 }
@@ -44,17 +42,14 @@ export class TodoDetailService {
 interface ITodoCreateService {
   title: string;
   description?: string;
-  statusId: number;
 }
 export class TodoCreateService {
   private title: string;
   private description?: string;
-  private statusId: number;
 
-  constructor({ title, description, statusId }: ITodoCreateService) {
+  constructor({ title, description }: ITodoCreateService) {
     this.title = title;
     this.description = description;
-    this.statusId = statusId;
   }
 
   async create(): Promise<Prisma.TodoGetPayload<object>> {
@@ -62,7 +57,6 @@ export class TodoCreateService {
       data: {
         title: this.title,
         description: this.description,
-        todoStatusId: this.statusId,
       },
     });
     return todo;
@@ -77,22 +71,16 @@ export class TodoCreateService {
 interface ITodoUpdateService {
   title?: string;
   description?: string;
-  statusId?: number;
 }
 export class TodoUpdateService {
   private todoId: number;
   private title?: string;
   private description?: string;
-  private statusId?: number;
 
-  constructor(
-    todoId: number,
-    { title, description, statusId }: ITodoUpdateService,
-  ) {
+  constructor(todoId: number, { title, description }: ITodoUpdateService) {
     this.todoId = todoId;
     this.title = title;
     this.description = description;
-    this.statusId = statusId;
   }
 
   async update(): Promise<Prisma.TodoGetPayload<object>> {
@@ -103,7 +91,6 @@ export class TodoUpdateService {
       data: {
         title: this.title,
         description: this.description,
-        todoStatusId: this.statusId,
       },
     });
     return todo;
