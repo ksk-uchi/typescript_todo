@@ -13,6 +13,7 @@ trigger: always_on
   - ORM: Prisma
   - Validation: Zod
   - Testing: Vitest
+  - Container: Podman
 - **frontend/**
   - Language: TypeScript
   - Library: React, React Router
