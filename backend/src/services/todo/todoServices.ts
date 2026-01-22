@@ -19,13 +19,20 @@ function createTodoRecord(todo: Prisma.TodoGetPayload<object>): TodoRecord {
 }
 
 export class TodoListService {
-  constructor() {}
-  async getData(includeDone: boolean = false): Promise<TodoRecord[]> {
-    const whereClause: Prisma.TodoWhereInput = includeDone
+  private includeDone: boolean;
+
+  constructor(options?: { includeDone?: boolean }) {
+    this.includeDone = options?.includeDone ?? false;
+  }
+
+  async getData(): Promise<TodoRecord[]> {
+    const doneCondition: Prisma.TodoWhereInput = this.includeDone
       ? {}
       : { done_at: null };
     const todoList = await prisma.todo.findMany({
-      where: whereClause,
+      where: {
+        ...doneCondition,
+      },
     });
     return todoList.map(createTodoRecord);
   }

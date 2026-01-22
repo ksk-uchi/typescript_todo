@@ -26,9 +26,9 @@ export const listTodoHandler = async (req: Request, res: Response) => {
   }
   const { include_done } = result.data;
 
-  const service = new TodoListService();
+  const service = new TodoListService({ includeDone: include_done });
   res.json({
-    todo: await service.getData(include_done),
+    todo: await service.getData(),
   });
 };
 

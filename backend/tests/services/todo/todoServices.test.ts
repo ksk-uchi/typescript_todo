@@ -28,6 +28,9 @@ describe("todoServices", () => {
       const todos = await service.getData();
 
       expect(prismaMock.todo.findMany).toHaveBeenCalledTimes(1);
+      expect(prismaMock.todo.findMany).toHaveBeenCalledWith({
+        where: { done_at: null },
+      });
       expect(todos).toEqual(
         mockTodos.map((todo) => ({
           id: todo.id,
@@ -37,6 +40,27 @@ describe("todoServices", () => {
           done_at: todo.done_at,
         })),
       );
+    });
+
+    it("includeDone=true の場合、全件取得するクエリが発行される", async () => {
+      const mockTodos = [
+        {
+          id: 1,
+          title: "Task 1",
+          description: null,
+          createdAt: new Date(),
+          done_at: null,
+        },
+      ];
+      prismaMock.todo.findMany.mockResolvedValue(mockTodos);
+
+      const service = new TodoListService({ includeDone: true });
+      await service.getData();
+
+      expect(prismaMock.todo.findMany).toHaveBeenCalledTimes(1);
+      expect(prismaMock.todo.findMany).toHaveBeenCalledWith({
+        where: {},
+      });
     });
   });
   describe("TodoDetailService", () => {
