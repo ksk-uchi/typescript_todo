@@ -3,6 +3,7 @@ export interface Todo {
   title: string;
   description: string;
   createdAt: string;
+  done_at: string | null;
 }
 
 export type CreateTodoDto = Pick<Todo, "title" | "description">;

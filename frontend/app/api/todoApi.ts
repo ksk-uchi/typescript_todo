@@ -12,8 +12,10 @@ type todoListApiResponse = {
 };
 
 export const todoApi = {
-  getAll: async (): Promise<Todo[]> => {
-    const response = await api.get<todoListApiResponse>("/");
+  getAll: async (includeDone: boolean = false): Promise<Todo[]> => {
+    const response = await api.get<todoListApiResponse>("/", {
+      params: { include_done: includeDone },
+    });
     return response.data.todo;
   },
 
@@ -34,5 +36,10 @@ export const todoApi = {
 
   delete: async (id: number): Promise<void> => {
     await api.delete(`/${id}`);
+  },
+
+  updateStatus: async (id: number, is_done: boolean): Promise<Todo> => {
+    const response = await api.put<Todo>(`/done/${id}`, { is_done });
+    return response.data;
   },
 };
