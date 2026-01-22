@@ -60,7 +60,6 @@ describe("todoHandlers Integration", () => {
     expect(response.body).toEqual({
       id: todo.id,
       title: todo.title,
-
       description: todo.description,
       createdAt: todo.createdAt.toISOString(),
     });
