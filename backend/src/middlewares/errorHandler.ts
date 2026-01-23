@@ -1,4 +1,8 @@
-import { ClientSideError, ValidationError } from "@/errors/clientSideError";
+import {
+  ClientSideError,
+  CSRFError,
+  ValidationError,
+} from "@/errors/clientSideError";
 import { NextFunction, Request, Response } from "express";
 
 const errorHandler = (

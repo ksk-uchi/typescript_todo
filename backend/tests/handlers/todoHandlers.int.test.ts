@@ -7,17 +7,13 @@ import {
 } from "tests/helpers/prismaTransaction";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-// CSRF token helper
-const getCsrfToken = async () => {
-  const getResponse = await request(app).get("/todo");
-  const cookies = getResponse.headers["set-cookie"] as unknown as string[];
-  const csrfCookie = cookies.find((c: string) => c.startsWith("_csrf="));
-  const token = csrfCookie?.split(";")[0].split("=")[1];
-  return { token, cookies };
-};
+const TEST_CSRF_TOKEN = "test-csrf-token";
+const TEST_CSRF_COOKIE = `_csrf=${TEST_CSRF_TOKEN}`;
 
 describe("todoHandlers Integration", () => {
   beforeEach(async () => {
+    // Delete all data to ensure clean state, because transactions might not cover seeded data or side effects from other tests if running in parallel/persisted DB
+    await prisma.todo.deleteMany();
     await startTransaction();
   });
 
@@ -54,8 +50,6 @@ describe("todoHandlers Integration", () => {
       hasPrevious: false,
     });
     // Soritng check: updated_at desc, id asc
-    // The created todos have same updated_at/created_at (transactional or fast enough)
-    // Order might rely on ID if updated_at is same.
     expect(response.body.todo[0].id).toBeLessThan(response.body.todo[1].id);
     expect(response.body.todo).toEqual(
       todos.map((todo) => ({
@@ -214,11 +208,10 @@ describe("todoHandlers Integration", () => {
   });
 
   it("[POST /todo] todo を作成できること", async () => {
-    const { token, cookies } = await getCsrfToken();
     const response = await request(app)
       .post("/todo")
-      .set("Cookie", cookies)
-      .set("X-CSRF-Token", token as string)
+      .set("Cookie", [TEST_CSRF_COOKIE])
+      .set("X-CSRF-Token", TEST_CSRF_TOKEN)
       .send({ title: "test title" });
 
     expect(response.status).toBe(201);
@@ -249,11 +242,10 @@ describe("todoHandlers Integration", () => {
       description: "new description",
     };
 
-    const { token, cookies } = await getCsrfToken();
     const response = await request(app)
       .patch(`/todo/${todo.id}`)
-      .set("Cookie", cookies)
-      .set("X-CSRF-Token", token as string)
+      .set("Cookie", [TEST_CSRF_COOKIE])
+      .set("X-CSRF-Token", TEST_CSRF_TOKEN)
       .send(requestBody);
 
     expect(response.status).toBe(200);
@@ -282,11 +274,10 @@ describe("todoHandlers Integration", () => {
   });
 
   it("[PATCH /todo/:id] todo が存在しない場合は 404 を返すこと", async () => {
-    const { token, cookies } = await getCsrfToken();
     const response = await request(app)
       .patch("/todo/999999999")
-      .set("Cookie", cookies)
-      .set("X-CSRF-Token", token as string)
+      .set("Cookie", [TEST_CSRF_COOKIE])
+      .set("X-CSRF-Token", TEST_CSRF_TOKEN)
       .send({ title: "updated" });
 
     expect(response.status).toBe(404);
@@ -296,11 +287,10 @@ describe("todoHandlers Integration", () => {
   });
 
   it("[PATCH /todo/:id] todo の id が数値でない場合は 422 を返すこと", async () => {
-    const { token, cookies } = await getCsrfToken();
     const response = await request(app)
       .patch("/todo/abc")
-      .set("Cookie", cookies)
-      .set("X-CSRF-Token", token as string)
+      .set("Cookie", [TEST_CSRF_COOKIE])
+      .set("X-CSRF-Token", TEST_CSRF_TOKEN)
       .send({ title: "updated" });
 
     expect(response.status).toBe(422);
@@ -320,11 +310,10 @@ describe("todoHandlers Integration", () => {
       },
     });
 
-    const { token, cookies } = await getCsrfToken();
     const response = await request(app)
       .delete(`/todo/${todo.id}`)
-      .set("Cookie", cookies)
-      .set("X-CSRF-Token", token as string);
+      .set("Cookie", [TEST_CSRF_COOKIE])
+      .set("X-CSRF-Token", TEST_CSRF_TOKEN);
 
     expect(response.status).toBe(200);
 
@@ -336,11 +325,10 @@ describe("todoHandlers Integration", () => {
   });
 
   it("[DELETE /todo/:id] todo が存在しない場合は 404 を返すこと", async () => {
-    const { token, cookies } = await getCsrfToken();
     const response = await request(app)
       .delete("/todo/999999999")
-      .set("Cookie", cookies)
-      .set("X-CSRF-Token", token as string);
+      .set("Cookie", [TEST_CSRF_COOKIE])
+      .set("X-CSRF-Token", TEST_CSRF_TOKEN);
 
     expect(response.status).toBe(404);
     expect(response.body).toEqual({
@@ -349,11 +337,10 @@ describe("todoHandlers Integration", () => {
   });
 
   it("[DELETE /todo/:id] todo の id が数値でない場合は 422 を返すこと", async () => {
-    const { token, cookies } = await getCsrfToken();
     const response = await request(app)
       .delete("/todo/abc")
-      .set("Cookie", cookies)
-      .set("X-CSRF-Token", token as string);
+      .set("Cookie", [TEST_CSRF_COOKIE])
+      .set("X-CSRF-Token", TEST_CSRF_TOKEN);
 
     expect(response.status).toBe(422);
     expect(response.body).toEqual({
@@ -371,11 +358,10 @@ describe("todoHandlers Integration", () => {
       },
     });
 
-    const { token, cookies } = await getCsrfToken();
     const response = await request(app)
       .put(`/todo/done/${todo.id}`)
-      .set("Cookie", cookies)
-      .set("X-CSRF-Token", token as string)
+      .set("Cookie", [TEST_CSRF_COOKIE])
+      .set("X-CSRF-Token", TEST_CSRF_TOKEN)
       .send({ is_done: true });
 
     expect(response.status).toBe(200);
@@ -395,11 +381,10 @@ describe("todoHandlers Integration", () => {
       },
     });
 
-    const { token, cookies } = await getCsrfToken();
     const response = await request(app)
       .put(`/todo/done/${todo.id}`)
-      .set("Cookie", cookies)
-      .set("X-CSRF-Token", token as string)
+      .set("Cookie", [TEST_CSRF_COOKIE])
+      .set("X-CSRF-Token", TEST_CSRF_TOKEN)
       .send({ is_done: false });
 
     expect(response.status).toBe(200);
@@ -418,11 +403,10 @@ describe("todoHandlers Integration", () => {
       },
     });
 
-    const { token, cookies } = await getCsrfToken();
     const response = await request(app)
       .put(`/todo/done/${todo.id}`)
-      .set("Cookie", cookies)
-      .set("X-CSRF-Token", token as string)
+      .set("Cookie", [TEST_CSRF_COOKIE])
+      .set("X-CSRF-Token", TEST_CSRF_TOKEN)
       .send({ is_done: "invalid" });
 
     expect(response.status).toBe(422);
