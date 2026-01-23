@@ -1,5 +1,4 @@
 import DeleteIcon from "@mui/icons-material/Delete";
-import EditIcon from "@mui/icons-material/Edit";
 import {
   Checkbox,
   IconButton,
@@ -35,32 +34,24 @@ export default function TodoList({
               key={todo.id}
               secondaryAction={
                 !isDone && (
-                  <>
-                    <IconButton
-                      edge="end"
-                      aria-label="edit"
-                      onClick={() => onEdit(todo)}
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton
-                      edge="end"
-                      aria-label="delete"
-                      onClick={() => onDelete(todo.id)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </>
+                  <IconButton
+                    edge="end"
+                    aria-label="delete"
+                    onClick={() => onDelete(todo.id)}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
                 )
               }
               disablePadding
             >
-              <ListItemButton dense>
+              <ListItemButton dense onClick={() => onEdit(todo)}>
                 <ListItemIcon>
                   <Checkbox
                     edge="start"
                     checked={isDone}
                     disableRipple
+                    onClick={(e) => e.stopPropagation()}
                     onChange={(e) => onToggleStatus(todo.id, e.target.checked)}
                   />
                 </ListItemIcon>
