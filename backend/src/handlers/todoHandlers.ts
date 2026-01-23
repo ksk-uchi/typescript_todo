@@ -39,16 +39,11 @@ export const listTodoHandler = async (req: Request, res: Response) => {
   const { todos, totalCount } = await service.getData();
 
   const totalPage = Math.ceil(totalCount / items_per_page);
-  // page > totalPage の場合、404エラー (ただし0件の場合は1ページ目を許容するか、あるいは0件でも問答無用で404か。要件は "Xページ目が存在しない場合は404"。0件のときは1ページ目も存在しない？
-  // 通常 0件のときは totalPage=0. page=1 > 0 となる.
-  // しかし空配列を返すのが一般的か。
-  // background: "Xページ目が存在しない場合は404エラー"
-  // 実装としては、totalCount > 0 かつ page > totalPage なら 404 とする。
-  // totalCount === 0 の場合、page=1 は許容、page > 1 は 404。
+  // totalCount > 0 の場合、指定ページが範囲外なら 404
+  // totalCount === 0 の場合、page === 1 は許容する
   if (totalCount > 0 && page > totalPage) {
     throw new NotFoundError(`Page ${page} not found`);
-  }
-  if (totalCount === 0 && page > 1) {
+  } else if (totalCount === 0 && page > 1) {
     throw new NotFoundError(`Page ${page} not found`);
   }
 
