@@ -12,8 +12,6 @@ const TEST_CSRF_COOKIE = `_csrf=${TEST_CSRF_TOKEN}`;
 
 describe("todoHandlers Integration", () => {
   beforeEach(async () => {
-    // Delete all data to ensure clean state, because transactions might not cover seeded data or side effects from other tests if running in parallel/persisted DB
-    await prisma.todo.deleteMany();
     await startTransaction();
   });
 
