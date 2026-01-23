@@ -34,3 +34,10 @@ export class ValidationError extends ClientSideError {
     this.targets = targets;
   }
 }
+
+export class CSRFError extends ClientSideError {
+  constructor(message = "CSRF Token Mismatch") {
+    super(message, 403);
+    this.name = "CSRFError";
+  }
+}

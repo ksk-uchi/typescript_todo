@@ -1,3 +1,4 @@
+import { CSRFError } from "@/errors/clientSideError";
 import type { NextFunction, Request, Response } from "express";
 
 export const csrf = (req: Request, res: Response, next: NextFunction) => {
@@ -11,5 +12,17 @@ export const csrf = (req: Request, res: Response, next: NextFunction) => {
     next();
     return;
   }
+
+  const tokenFromHeader = req.get("X-CSRF-Token");
+  const tokenFromCookie = req.cookies["_csrf"];
+
+  if (
+    !tokenFromHeader ||
+    !tokenFromCookie ||
+    tokenFromHeader !== tokenFromCookie
+  ) {
+    throw new CSRFError();
+  }
+
   next();
 };
