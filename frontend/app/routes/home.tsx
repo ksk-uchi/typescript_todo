@@ -115,7 +115,7 @@ export default function Home() {
 
   const handleHideDoneChange = (checked: boolean) => {
     setHideDone(checked);
-    // setPage(1); // Step 6 logic
+    setPage(1); // Reset to page 1 when filter changes
   };
 
   return (
