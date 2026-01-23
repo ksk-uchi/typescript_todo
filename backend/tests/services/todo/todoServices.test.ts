@@ -10,36 +10,55 @@ import {
   TodoUpdateService,
 } from "@/services/todo/todoServices";
 
+// Helper function for creating mock todo objects
+type MockTodo = {
+  id: number;
+  title: string;
+  description: string | null;
+  createdAt: Date;
+  updated_at: Date;
+  done_at: Date | null;
+};
+
+const createMockTodo = (overrides?: Partial<MockTodo>): MockTodo => ({
+  id: 1,
+  title: "Test Todo",
+  description: null,
+  createdAt: new Date(),
+  updated_at: new Date(),
+  done_at: null,
+  ...overrides,
+});
+
 describe("todoServices", () => {
   describe("TodoListService", () => {
     it("todo を全件取得できる", async () => {
       const mockTodos = [
-        {
+        createMockTodo({
+          id: 2,
+          title: "Todo 2",
+          updated_at: new Date("2023-01-02"),
+        }),
+        createMockTodo({
           id: 1,
-          title: "Task 1",
-          description: null,
-          createdAt: new Date(),
-          done_at: null,
-        },
+          title: "Todo 1",
+          updated_at: new Date("2023-01-01"),
+        }),
       ];
+
       prismaMock.todo.findMany.mockResolvedValue(mockTodos);
 
       const service = new TodoListService();
-      const todos = await service.getData();
+      const result = await service.getData();
 
       expect(prismaMock.todo.findMany).toHaveBeenCalledTimes(1);
       expect(prismaMock.todo.findMany).toHaveBeenCalledWith({
         where: { done_at: null },
+        orderBy: [{ updated_at: "desc" }, { id: "asc" }],
       });
-      expect(todos).toEqual(
-        mockTodos.map((todo) => ({
-          id: todo.id,
-          title: todo.title,
-          description: todo.description,
-          createdAt: todo.createdAt,
-          done_at: todo.done_at,
-        })),
-      );
+      expect(result).toHaveLength(2);
+      expect(result[0].title).toBe("Todo 2");
+      expect(result[1].title).toBe("Todo 1");
     });
 
     it("includeDone=true の場合、全件取得するクエリが発行される", async () => {
@@ -49,10 +68,12 @@ describe("todoServices", () => {
           title: "Task 1",
           description: null,
           createdAt: new Date(),
+          updated_at: new Date(),
           done_at: null,
         },
       ];
       prismaMock.todo.findMany.mockResolvedValue(mockTodos);
+      prismaMock.todo.count.mockResolvedValue(1);
 
       const service = new TodoListService({ includeDone: true });
       await service.getData();
@@ -60,7 +81,11 @@ describe("todoServices", () => {
       expect(prismaMock.todo.findMany).toHaveBeenCalledTimes(1);
       expect(prismaMock.todo.findMany).toHaveBeenCalledWith({
         where: {},
+        skip: undefined,
+        take: undefined,
+        orderBy: [{ updated_at: "desc" }, { id: "asc" }],
       });
+      expect(prismaMock.todo.count).toHaveBeenCalledTimes(1);
     });
   });
   describe("TodoDetailService", () => {
@@ -70,6 +95,7 @@ describe("todoServices", () => {
         title: "Task 1",
         description: null,
         createdAt: new Date(),
+        updated_at: new Date(),
         done_at: null,
       };
       prismaMock.todo.findUnique.mockResolvedValue(mockTodo);
@@ -83,6 +109,7 @@ describe("todoServices", () => {
         title: mockTodo.title,
         description: mockTodo.description,
         createdAt: mockTodo.createdAt,
+        updated_at: mockTodo.updated_at,
         done_at: mockTodo.done_at,
       });
     });
@@ -94,6 +121,7 @@ describe("todoServices", () => {
         title: "Task 1",
         description: null,
         createdAt: new Date(),
+        updated_at: new Date(),
         done_at: null,
       };
       prismaMock.todo.create.mockResolvedValue(mockTodo);
@@ -109,6 +137,7 @@ describe("todoServices", () => {
         title: mockTodo.title,
         description: mockTodo.description,
         createdAt: mockTodo.createdAt,
+        updated_at: mockTodo.updated_at,
         done_at: mockTodo.done_at,
       });
     });
@@ -120,6 +149,7 @@ describe("todoServices", () => {
         title: "Task 1",
         description: null,
         createdAt: new Date(),
+        updated_at: new Date(),
         done_at: null,
       };
       prismaMock.todo.update.mockResolvedValue(mockTodo);
@@ -135,6 +165,7 @@ describe("todoServices", () => {
         title: mockTodo.title,
         description: mockTodo.description,
         createdAt: mockTodo.createdAt,
+        updated_at: mockTodo.updated_at,
         done_at: mockTodo.done_at,
       });
     });
@@ -154,6 +185,7 @@ describe("todoServices", () => {
         title: "Task 1",
         description: null,
         createdAt: new Date(),
+        updated_at: new Date(),
         done_at: new Date(),
       };
       prismaMock.todo.update.mockResolvedValue(mockTodo);
@@ -167,6 +199,7 @@ describe("todoServices", () => {
         title: mockTodo.title,
         description: mockTodo.description,
         createdAt: mockTodo.createdAt,
+        updated_at: mockTodo.updated_at,
         done_at: mockTodo.done_at,
       });
     });
@@ -177,6 +210,7 @@ describe("todoServices", () => {
         title: "Task 1",
         description: null,
         createdAt: new Date(),
+        updated_at: new Date(),
         done_at: null,
       };
       prismaMock.todo.update.mockResolvedValue(mockTodo);
@@ -190,6 +224,7 @@ describe("todoServices", () => {
         title: mockTodo.title,
         description: mockTodo.description,
         createdAt: mockTodo.createdAt,
+        updated_at: mockTodo.updated_at,
         done_at: mockTodo.done_at,
       });
     });

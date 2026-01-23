@@ -6,6 +6,7 @@ type TodoRecord = {
   title: string;
   description: string | null;
   createdAt: Date;
+  updated_at: Date;
   done_at: Date | null;
 };
 function createTodoRecord(todo: Prisma.TodoGetPayload<object>): TodoRecord {
@@ -14,6 +15,7 @@ function createTodoRecord(todo: Prisma.TodoGetPayload<object>): TodoRecord {
     title: todo.title,
     description: todo.description,
     createdAt: todo.createdAt,
+    updated_at: todo.updated_at,
     done_at: todo.done_at,
   };
 }
@@ -23,21 +25,28 @@ export interface ITodoListService {
 }
 
 export class TodoListService {
-  private includeDone: boolean;
+  constructor(
+    private args: {
+      includeDone?: boolean;
+    } = {},
+  ) {}
 
-  constructor({ includeDone }: ITodoListService = {}) {
-    this.includeDone = includeDone ?? false;
+  private get includeDone() {
+    return this.args.includeDone ?? false;
   }
 
   async getData(): Promise<TodoRecord[]> {
     const doneCondition: Prisma.TodoWhereInput = this.includeDone
       ? {}
       : { done_at: null };
+
     const todoList = await prisma.todo.findMany({
       where: {
         ...doneCondition,
       },
+      orderBy: [{ updated_at: "desc" }, { id: "asc" }],
     });
+
     return todoList.map(createTodoRecord);
   }
 }

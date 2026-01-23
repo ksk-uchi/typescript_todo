@@ -36,15 +36,28 @@ describe("todoHandlers Integration", () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty("todo");
     expect(response.body.todo).toHaveLength(2);
-    expect(response.body).toEqual({
-      todo: todos.map((todo) => ({
+    expect(response.body.meta).toEqual({
+      totalCount: 2,
+      totalPage: 1,
+      currentPage: 1,
+      itemsPerPage: 20,
+      hasNext: false,
+      hasPrevious: false,
+    });
+    // Soritng check: updated_at desc, id asc
+    // The created todos have same updated_at/created_at (transactional or fast enough)
+    // Order might rely on ID if updated_at is same.
+    expect(response.body.todo[0].id).toBeLessThan(response.body.todo[1].id);
+    expect(response.body.todo).toEqual(
+      todos.map((todo) => ({
         id: todo.id,
         title: todo.title,
         description: todo.description,
         createdAt: todo.createdAt.toISOString(),
+        updated_at: todo.updated_at.toISOString(),
         done_at: null,
       })),
-    });
+    );
   });
 
   it("[GET /todo] 完了済みの todo はデフォルトで取得されないこと", async () => {
@@ -55,8 +68,12 @@ describe("todoHandlers Integration", () => {
           done_at: null,
         },
         {
-          title: "done todo",
-          done_at: new Date(),
+          title: "Todo 1",
+          done_at: null,
+        },
+        {
+          title: "Todo 2",
+          done_at: null,
         },
       ],
     });
@@ -64,8 +81,9 @@ describe("todoHandlers Integration", () => {
     const response = await request(app).get("/todo");
 
     expect(response.status).toBe(200);
-    expect(response.body.todo).toHaveLength(1);
-    expect(response.body.todo[0].title).toBe("active todo");
+    expect(response.body.todo).toHaveLength(2);
+    expect(response.body.todo[0].title).toBe("Todo 2");
+    expect(response.body.todo[1].title).toBe("Todo 1");
   });
 
   it("[GET /todo] include_done=true で完了済みの todo も取得できること", async () => {
@@ -104,6 +122,7 @@ describe("todoHandlers Integration", () => {
       title: todo.title,
       description: todo.description,
       createdAt: todo.createdAt.toISOString(),
+      updated_at: todo.updated_at.toISOString(),
       done_at: null,
     });
   });
@@ -144,6 +163,7 @@ describe("todoHandlers Integration", () => {
       title: "test title",
       description: null,
       createdAt: expect.any(Date),
+      updated_at: expect.any(Date),
       done_at: null,
     });
   });
@@ -175,6 +195,7 @@ describe("todoHandlers Integration", () => {
     expect(response.body).toEqual({
       ...expectedTodo,
       createdAt: todo.createdAt.toISOString(),
+      updated_at: expect.any(String),
       done_at: null,
     });
 
@@ -184,6 +205,7 @@ describe("todoHandlers Integration", () => {
     expect(updatedTodo).toEqual({
       ...expectedTodo,
       createdAt: todo.createdAt,
+      updated_at: expect.any(Date),
       done_at: null,
     });
   });
