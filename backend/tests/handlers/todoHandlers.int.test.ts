@@ -68,12 +68,8 @@ describe("todoHandlers Integration", () => {
           done_at: null,
         },
         {
-          title: "Todo 1",
-          done_at: null,
-        },
-        {
-          title: "Todo 2",
-          done_at: null,
+          title: "done todo",
+          done_at: new Date(),
         },
       ],
     });
@@ -81,9 +77,8 @@ describe("todoHandlers Integration", () => {
     const response = await request(app).get("/todo");
 
     expect(response.status).toBe(200);
-    expect(response.body.todo).toHaveLength(2);
-    expect(response.body.todo[0].title).toBe("Todo 2");
-    expect(response.body.todo[1].title).toBe("Todo 1");
+    expect(response.body.todo).toHaveLength(1);
+    expect(response.body.todo[0].title).toBe("active todo");
   });
 
   it("[GET /todo] include_done=true で完了済みの todo も取得できること", async () => {
@@ -104,6 +99,67 @@ describe("todoHandlers Integration", () => {
 
     expect(response.status).toBe(200);
     expect(response.body.todo).toHaveLength(2);
+  });
+
+  it("[GET /todo] ページネーションが動作すること", async () => {
+    // Create 30 todos
+    const data = Array.from({ length: 30 }).map((_, i) => ({
+      title: `todo ${i + 1}`,
+    }));
+    await prisma.todo.createMany({ data });
+
+    // Page 1, Default 20 items
+    const res1 = await request(app).get("/todo");
+    expect(res1.body.todo).toHaveLength(20);
+    expect(res1.body.meta).toEqual({
+      totalCount: 30,
+      totalPage: 2,
+      currentPage: 1,
+      itemsPerPage: 20,
+      hasNext: true,
+      hasPrevious: false,
+    });
+
+    // Page 2, Default 20 items (should have 10 remaining)
+    const res2 = await request(app).get("/todo?page=2");
+    expect(res2.body.todo).toHaveLength(10);
+    expect(res2.body.meta).toEqual({
+      totalCount: 30,
+      totalPage: 2,
+      currentPage: 2,
+      itemsPerPage: 20,
+      hasNext: false,
+      hasPrevious: true,
+    });
+  });
+
+  it("[GET /todo] items_per_page が動作すること", async () => {
+    const data = Array.from({ length: 5 }).map((_, i) => ({
+      title: `todo ${i + 1}`,
+    }));
+    await prisma.todo.createMany({ data });
+
+    const res = await request(app).get("/todo?items_per_page=3");
+    expect(res.body.todo).toHaveLength(3);
+    expect(res.body.meta).toEqual({
+      totalCount: 5,
+      totalPage: 2,
+      currentPage: 1,
+      itemsPerPage: 3,
+      hasNext: true,
+      hasPrevious: false,
+    });
+  });
+
+  it("[GET /todo] 存在しないページは 404 を返すこと", async () => {
+    await prisma.todo.create({ data: { title: "test" } });
+    const res = await request(app).get("/todo?page=100");
+    expect(res.status).toBe(404);
+  });
+
+  it("[GET /todo] items_per_page の最大値(100)を超えると 422 エラー", async () => {
+    const res = await request(app).get("/todo?items_per_page=101");
+    expect(res.status).toBe(422);
   });
 
   it("[GET /todo/:id] todo を1件取得できること", async () => {

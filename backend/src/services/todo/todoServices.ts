@@ -22,32 +22,46 @@ function createTodoRecord(todo: Prisma.TodoGetPayload<object>): TodoRecord {
 
 export interface ITodoListService {
   includeDone?: boolean;
+  skip?: number;
+  take?: number;
 }
 
 export class TodoListService {
-  constructor(
-    private args: {
-      includeDone?: boolean;
-    } = {},
-  ) {}
+  private includeDone: boolean;
+  private skip?: number;
+  private take?: number;
 
-  private get includeDone() {
-    return this.args.includeDone ?? false;
+  constructor({ includeDone, skip, take }: ITodoListService = {}) {
+    this.includeDone = includeDone ?? false;
+    this.skip = skip;
+    this.take = take;
   }
 
-  async getData(): Promise<TodoRecord[]> {
+  async getData(): Promise<{ todos: TodoRecord[]; totalCount: number }> {
     const doneCondition: Prisma.TodoWhereInput = this.includeDone
       ? {}
       : { done_at: null };
 
-    const todoList = await prisma.todo.findMany({
-      where: {
-        ...doneCondition,
-      },
-      orderBy: [{ updated_at: "desc" }, { id: "asc" }],
-    });
+    const [todoList, totalCount] = await Promise.all([
+      prisma.todo.findMany({
+        where: {
+          ...doneCondition,
+        },
+        skip: this.skip,
+        take: this.take,
+        orderBy: [{ updated_at: "desc" }, { id: "asc" }],
+      }),
+      prisma.todo.count({
+        where: {
+          ...doneCondition,
+        },
+      }),
+    ]);
 
-    return todoList.map(createTodoRecord);
+    return {
+      todos: todoList.map(createTodoRecord),
+      totalCount,
+    };
   }
 }
 

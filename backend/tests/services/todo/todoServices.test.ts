@@ -10,55 +10,47 @@ import {
   TodoUpdateService,
 } from "@/services/todo/todoServices";
 
-// Helper function for creating mock todo objects
-type MockTodo = {
-  id: number;
-  title: string;
-  description: string | null;
-  createdAt: Date;
-  updated_at: Date;
-  done_at: Date | null;
-};
-
-const createMockTodo = (overrides?: Partial<MockTodo>): MockTodo => ({
-  id: 1,
-  title: "Test Todo",
-  description: null,
-  createdAt: new Date(),
-  updated_at: new Date(),
-  done_at: null,
-  ...overrides,
-});
-
 describe("todoServices", () => {
   describe("TodoListService", () => {
     it("todo を全件取得できる", async () => {
       const mockTodos = [
-        createMockTodo({
-          id: 2,
-          title: "Todo 2",
-          updated_at: new Date("2023-01-02"),
-        }),
-        createMockTodo({
+        {
           id: 1,
-          title: "Todo 1",
-          updated_at: new Date("2023-01-01"),
-        }),
+          title: "Task 1",
+          description: null,
+          createdAt: new Date(),
+          updated_at: new Date(),
+          done_at: null,
+        },
       ];
-
       prismaMock.todo.findMany.mockResolvedValue(mockTodos);
+      prismaMock.todo.count.mockResolvedValue(1);
 
       const service = new TodoListService();
-      const result = await service.getData();
+      const { todos, totalCount } = await service.getData();
 
       expect(prismaMock.todo.findMany).toHaveBeenCalledTimes(1);
       expect(prismaMock.todo.findMany).toHaveBeenCalledWith({
         where: { done_at: null },
+        skip: undefined,
+        take: undefined,
         orderBy: [{ updated_at: "desc" }, { id: "asc" }],
       });
-      expect(result).toHaveLength(2);
-      expect(result[0].title).toBe("Todo 2");
-      expect(result[1].title).toBe("Todo 1");
+      expect(prismaMock.todo.count).toHaveBeenCalledTimes(1);
+      expect(prismaMock.todo.count).toHaveBeenCalledWith({
+        where: { done_at: null },
+      });
+      expect(todos).toEqual(
+        mockTodos.map((todo) => ({
+          id: todo.id,
+          title: todo.title,
+          description: todo.description,
+          createdAt: todo.createdAt,
+          updated_at: todo.updated_at,
+          done_at: todo.done_at,
+        })),
+      );
+      expect(totalCount).toBe(1);
     });
 
     it("includeDone=true の場合、全件取得するクエリが発行される", async () => {

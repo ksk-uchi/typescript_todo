@@ -19,18 +19,49 @@ export const listTodoHandler = async (req: Request, res: Response) => {
       .optional()
       .default("false")
       .transform((v) => v === "true"),
+    page: z.coerce.number().min(1).default(1),
+    items_per_page: z.coerce.number().min(1).max(100).default(20),
   });
   const result = schema.safeParse(req.query);
   if (!result.success) {
     throw new ValidationError("", result.error);
   }
-  const { include_done } = result.data;
+  const { include_done, page, items_per_page } = result.data;
 
-  const service = new TodoListService({ includeDone: include_done });
-  const todos = await service.getData();
+  const skip = (page - 1) * items_per_page;
+  const take = items_per_page;
+
+  const service = new TodoListService({
+    includeDone: include_done,
+    skip,
+    take,
+  });
+  const { todos, totalCount } = await service.getData();
+
+  const totalPage = Math.ceil(totalCount / items_per_page);
+  // page > totalPage の場合、404エラー (ただし0件の場合は1ページ目を許容するか、あるいは0件でも問答無用で404か。要件は "Xページ目が存在しない場合は404"。0件のときは1ページ目も存在しない？
+  // 通常 0件のときは totalPage=0. page=1 > 0 となる.
+  // しかし空配列を返すのが一般的か。
+  // background: "Xページ目が存在しない場合は404エラー"
+  // 実装としては、totalCount > 0 かつ page > totalPage なら 404 とする。
+  // totalCount === 0 の場合、page=1 は許容、page > 1 は 404。
+  if (totalCount > 0 && page > totalPage) {
+    throw new NotFoundError(`Page ${page} not found`);
+  }
+  if (totalCount === 0 && page > 1) {
+    throw new NotFoundError(`Page ${page} not found`);
+  }
 
   res.json({
     todo: todos,
+    meta: {
+      totalCount,
+      totalPage,
+      currentPage: page,
+      itemsPerPage: items_per_page,
+      hasNext: page < totalPage,
+      hasPrevious: page > 1,
+    },
   });
 };
 
