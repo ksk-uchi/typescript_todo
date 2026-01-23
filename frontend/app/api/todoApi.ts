@@ -1,5 +1,10 @@
 import axios from "axios";
-import type { CreateTodoDto, Todo, UpdateTodoDto } from "../types";
+import type {
+  CreateTodoDto,
+  GetTodoListResponse,
+  Todo,
+  UpdateTodoDto,
+} from "../types";
 
 const baseURL = "http://localhost:3000/todo";
 
@@ -7,16 +12,16 @@ const api = axios.create({
   baseURL: baseURL,
 });
 
-type todoListApiResponse = {
-  todo: Todo[];
-};
-
 export const todoApi = {
-  getAll: async (includeDone: boolean = false): Promise<Todo[]> => {
-    const response = await api.get<todoListApiResponse>("/", {
-      params: { include_done: includeDone },
+  getAll: async (
+    includeDone: boolean = false,
+    page: number = 1,
+    items_per_page: number = 20,
+  ): Promise<GetTodoListResponse> => {
+    const response = await api.get<GetTodoListResponse>("/", {
+      params: { include_done: includeDone, page, items_per_page },
     });
-    return response.data.todo;
+    return response.data;
   },
 
   getById: async (id: number): Promise<Todo> => {
