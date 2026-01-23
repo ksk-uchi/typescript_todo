@@ -7,6 +7,15 @@ import {
 } from "tests/helpers/prismaTransaction";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+// CSRF token helper
+const getCsrfToken = async () => {
+  const getResponse = await request(app).get("/todo");
+  const cookies = getResponse.headers["set-cookie"] as unknown as string[];
+  const csrfCookie = cookies.find((c: string) => c.startsWith("_csrf="));
+  const token = csrfCookie?.split(";")[0].split("=")[1];
+  return { token, cookies };
+};
+
 describe("todoHandlers Integration", () => {
   beforeEach(async () => {
     await startTransaction();
@@ -205,8 +214,11 @@ describe("todoHandlers Integration", () => {
   });
 
   it("[POST /todo] todo を作成できること", async () => {
+    const { token, cookies } = await getCsrfToken();
     const response = await request(app)
       .post("/todo")
+      .set("Cookie", cookies)
+      .set("X-CSRF-Token", token as string)
       .send({ title: "test title" });
 
     expect(response.status).toBe(201);
@@ -237,8 +249,11 @@ describe("todoHandlers Integration", () => {
       description: "new description",
     };
 
+    const { token, cookies } = await getCsrfToken();
     const response = await request(app)
       .patch(`/todo/${todo.id}`)
+      .set("Cookie", cookies)
+      .set("X-CSRF-Token", token as string)
       .send(requestBody);
 
     expect(response.status).toBe(200);
@@ -267,7 +282,12 @@ describe("todoHandlers Integration", () => {
   });
 
   it("[PATCH /todo/:id] todo が存在しない場合は 404 を返すこと", async () => {
-    const response = await request(app).patch("/todo/999999999");
+    const { token, cookies } = await getCsrfToken();
+    const response = await request(app)
+      .patch("/todo/999999999")
+      .set("Cookie", cookies)
+      .set("X-CSRF-Token", token as string)
+      .send({ title: "updated" });
 
     expect(response.status).toBe(404);
     expect(response.body).toEqual({
@@ -276,7 +296,12 @@ describe("todoHandlers Integration", () => {
   });
 
   it("[PATCH /todo/:id] todo の id が数値でない場合は 422 を返すこと", async () => {
-    const response = await request(app).patch("/todo/abc");
+    const { token, cookies } = await getCsrfToken();
+    const response = await request(app)
+      .patch("/todo/abc")
+      .set("Cookie", cookies)
+      .set("X-CSRF-Token", token as string)
+      .send({ title: "updated" });
 
     expect(response.status).toBe(422);
     expect(response.body).toEqual({
@@ -295,7 +320,11 @@ describe("todoHandlers Integration", () => {
       },
     });
 
-    const response = await request(app).delete(`/todo/${todo.id}`);
+    const { token, cookies } = await getCsrfToken();
+    const response = await request(app)
+      .delete(`/todo/${todo.id}`)
+      .set("Cookie", cookies)
+      .set("X-CSRF-Token", token as string);
 
     expect(response.status).toBe(200);
 
@@ -307,7 +336,11 @@ describe("todoHandlers Integration", () => {
   });
 
   it("[DELETE /todo/:id] todo が存在しない場合は 404 を返すこと", async () => {
-    const response = await request(app).delete("/todo/999999999");
+    const { token, cookies } = await getCsrfToken();
+    const response = await request(app)
+      .delete("/todo/999999999")
+      .set("Cookie", cookies)
+      .set("X-CSRF-Token", token as string);
 
     expect(response.status).toBe(404);
     expect(response.body).toEqual({
@@ -316,7 +349,11 @@ describe("todoHandlers Integration", () => {
   });
 
   it("[DELETE /todo/:id] todo の id が数値でない場合は 422 を返すこと", async () => {
-    const response = await request(app).delete("/todo/abc");
+    const { token, cookies } = await getCsrfToken();
+    const response = await request(app)
+      .delete("/todo/abc")
+      .set("Cookie", cookies)
+      .set("X-CSRF-Token", token as string);
 
     expect(response.status).toBe(422);
     expect(response.body).toEqual({
@@ -334,8 +371,11 @@ describe("todoHandlers Integration", () => {
       },
     });
 
+    const { token, cookies } = await getCsrfToken();
     const response = await request(app)
       .put(`/todo/done/${todo.id}`)
+      .set("Cookie", cookies)
+      .set("X-CSRF-Token", token as string)
       .send({ is_done: true });
 
     expect(response.status).toBe(200);
@@ -355,8 +395,11 @@ describe("todoHandlers Integration", () => {
       },
     });
 
+    const { token, cookies } = await getCsrfToken();
     const response = await request(app)
       .put(`/todo/done/${todo.id}`)
+      .set("Cookie", cookies)
+      .set("X-CSRF-Token", token as string)
       .send({ is_done: false });
 
     expect(response.status).toBe(200);
@@ -375,8 +418,11 @@ describe("todoHandlers Integration", () => {
       },
     });
 
+    const { token, cookies } = await getCsrfToken();
     const response = await request(app)
       .put(`/todo/done/${todo.id}`)
+      .set("Cookie", cookies)
+      .set("X-CSRF-Token", token as string)
       .send({ is_done: "invalid" });
 
     expect(response.status).toBe(422);
