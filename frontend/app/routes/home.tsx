@@ -90,8 +90,15 @@ export default function Home() {
   const handleDelete = async (id: number) => {
     try {
       await todoApi.delete(id);
-      // 削除後はページネーションの整合性を保つためリフェッチ
-      await fetchTodos();
+
+      // If we are on a page > 1 and this was the last item, go back a page.
+      if (page > 1 && todos.length === 1) {
+        setPage(page - 1);
+        // setPage triggers useEffect -> fetchTodos
+      } else {
+        await fetchTodos();
+      }
+
       setIsModalOpen(false);
     } catch (error) {
       console.error("Failed to delete todo", error);
