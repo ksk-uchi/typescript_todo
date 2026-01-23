@@ -12,6 +12,9 @@ app.post("/test-csrf-middleware", (_, res) => {
 });
 
 describe("CSRF Middleware", () => {
+  const TEST_TOKEN = "test-csrf-token-123";
+  const TEST_COOKIE = `_csrf=${TEST_TOKEN}`;
+
   it("should set _csrf cookie on GET request", async () => {
     const response = await request(app).get("/test-csrf-middleware");
     expect(response.status).toBe(200);
@@ -26,48 +29,31 @@ describe("CSRF Middleware", () => {
   });
 
   it("should accept POST request with valid CSRF token in header", async () => {
-    // 1. Get Token
-    const getResponse = await request(app).get("/test-csrf-middleware");
-    const cookies = getResponse.headers["set-cookie"] as unknown as string[];
-    const csrfCookie = cookies.find((c: string) => c.startsWith("_csrf="));
-    const token = csrfCookie?.split(";")[0].split("=")[1];
-
-    expect(token).toBeDefined();
-
-    // 2. Post with Token
-    const postResponse = await request(app)
+    const response = await request(app)
       .post("/test-csrf-middleware")
-      .set("Cookie", cookies)
-      .set("X-CSRF-Token", token as string)
+      .set("Cookie", [TEST_COOKIE])
+      .set("X-CSRF-Token", TEST_TOKEN)
       .send({ data: "test" });
 
-    expect(postResponse.status).toBe(200);
+    expect(response.status).toBe(200);
   });
 
   it("should reject POST request without CSRF token in header", async () => {
-    // 1. Get Token
-    const getResponse = await request(app).get("/test-csrf-middleware");
-    const cookies = getResponse.headers["set-cookie"] as unknown as string[];
-
-    // 2. Post without Header
-    const postResponse = await request(app)
+    const response = await request(app)
       .post("/test-csrf-middleware")
-      .set("Cookie", cookies)
+      .set("Cookie", [TEST_COOKIE])
       .send({ data: "test" });
 
-    expect(postResponse.status).toBe(403);
+    expect(response.status).toBe(403);
   });
 
   it("should reject POST request with mismatched CSRF token", async () => {
-    const getResponse = await request(app).get("/test-csrf-middleware");
-    const cookies = getResponse.headers["set-cookie"] as unknown as string[];
-
-    const postResponse = await request(app)
+    const response = await request(app)
       .post("/test-csrf-middleware")
-      .set("Cookie", cookies)
+      .set("Cookie", [TEST_COOKIE])
       .set("X-CSRF-Token", "invalid-token")
       .send({ data: "test" });
 
-    expect(postResponse.status).toBe(403);
+    expect(response.status).toBe(403);
   });
 });
