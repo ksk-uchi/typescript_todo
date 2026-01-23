@@ -1,10 +1,12 @@
 import AddIcon from "@mui/icons-material/Add";
 import {
+  Alert,
   Box,
   Checkbox,
   Container,
   Fab,
   FormControlLabel,
+  Snackbar,
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
@@ -30,6 +32,23 @@ export default function Home() {
   const [hideDone, setHideDone] = useState(true);
   const [page, setPage] = useState(1);
   const [meta, setMeta] = useState<PaginationMeta | null>(null);
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: "success" | "error";
+  }>({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
+  const showSnackbar = (message: string, severity: "success" | "error") => {
+    setSnackbar({ open: true, message, severity });
+  };
 
   const fetchTodos = async () => {
     try {
@@ -53,8 +72,10 @@ export default function Home() {
       await todoApi.create(data);
       // Create後、最新の順序を反映するためリフェッチする
       await fetchTodos();
+      showSnackbar("Todo created successfully", "success");
     } catch (error) {
       console.error("Failed to create todo", error);
+      showSnackbar("Failed to create todo", "error");
     }
   };
 
@@ -62,8 +83,10 @@ export default function Home() {
     try {
       const updatedTodo = await todoApi.update(id, data);
       setTodos(todos.map((t) => (t.id === id ? updatedTodo : t)));
+      showSnackbar("Todo updated successfully", "success");
     } catch (error) {
       console.error("Failed to update todo", error);
+      showSnackbar("Failed to update todo", "error");
     }
   };
 
@@ -75,8 +98,10 @@ export default function Home() {
       // 今回の仕様変更で updated_at 順になるので、更新すると順序が変わるはず。
       // なのでリフェッチする。
       await fetchTodos();
+      showSnackbar("Todo status updated successfully", "success");
     } catch (error) {
       console.error("Failed to update todo status", error);
+      showSnackbar("Failed to update todo status", "error");
     }
   };
 
@@ -101,8 +126,10 @@ export default function Home() {
       }
 
       setIsModalOpen(false);
+      showSnackbar("Todo deleted successfully", "success");
     } catch (error) {
       console.error("Failed to delete todo", error);
+      showSnackbar("Failed to delete todo", "error");
     }
   };
 
@@ -167,6 +194,19 @@ export default function Home() {
         onSave={handleSave}
         onDelete={handleDelete}
       />
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 }
