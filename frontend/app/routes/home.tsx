@@ -8,7 +8,9 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
+import type { PaginationMeta } from "../api/todoApi";
 import { todoApi } from "../api/todoApi";
+import PaginationControl from "../components/PaginationControl";
 import TodoList from "../components/TodoList";
 import TodoModal from "../components/TodoModal";
 import type { CreateTodoDto, Todo, UpdateTodoDto } from "../types";
@@ -26,11 +28,17 @@ export default function Home() {
   const [selectedTodo, setSelectedTodo] = useState<Todo | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [hideDone, setHideDone] = useState(true);
+  const [page, setPage] = useState(1);
+  const [meta, setMeta] = useState<PaginationMeta | null>(null);
 
   const fetchTodos = async () => {
     try {
-      const data = await todoApi.getAll(!hideDone);
+      const { todo: data, meta: newMeta } = await todoApi.getAll(
+        !hideDone,
+        page,
+      );
       setTodos(data);
+      setMeta(newMeta);
     } catch (error) {
       console.error("Failed to fetch todos", error);
     }
@@ -38,12 +46,13 @@ export default function Home() {
 
   useEffect(() => {
     fetchTodos();
-  }, [hideDone]);
+  }, [hideDone, page]);
 
   const handleCreate = async (data: CreateTodoDto) => {
     try {
-      const newTodo = await todoApi.create(data);
-      setTodos([...todos, newTodo]);
+      await todoApi.create(data);
+      // Create後、最新の順序を反映するためリフェッチする
+      await fetchTodos();
     } catch (error) {
       console.error("Failed to create todo", error);
     }
@@ -60,9 +69,12 @@ export default function Home() {
 
   const handleToggleStatus = async (id: number, is_done: boolean) => {
     try {
-      const updatedTodo = await todoApi.updateDoneStatus(id, is_done);
-      // Update local state without refetching to keep the item visible if hiding completed
-      setTodos(todos.map((t) => (t.id === id ? updatedTodo : t)));
+      await todoApi.updateDoneStatus(id, is_done);
+      // ステータス更新で順序が変わる可能性があるため、リフェッチが安全だが、
+      // ここではUX優先でローカル更新しつつ、必要ならリフェッチ
+      // 今回の仕様変更で updated_at 順になるので、更新すると順序が変わるはず。
+      // なのでリフェッチする。
+      await fetchTodos();
     } catch (error) {
       console.error("Failed to update todo status", error);
     }
@@ -79,8 +91,16 @@ export default function Home() {
   const handleDelete = async (id: number) => {
     try {
       await todoApi.delete(id);
-      setTodos(todos.filter((t) => t.id !== id));
-      setIsModalOpen(false); // Ensure modal is closed if deleting from modal
+
+      // If we are on a page > 1 and this was the last item, go back a page.
+      if (page > 1 && todos.length === 1) {
+        setPage(page - 1);
+        // setPage triggers useEffect -> fetchTodos
+      } else {
+        await fetchTodos();
+      }
+
+      setIsModalOpen(false);
     } catch (error) {
       console.error("Failed to delete todo", error);
     }
@@ -96,6 +116,11 @@ export default function Home() {
     setIsModalOpen(false);
   };
 
+  const handleHideDoneChange = (checked: boolean) => {
+    setHideDone(checked);
+    setPage(1); // Reset to page 1 when filter changes
+  };
+
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom align="center">
@@ -107,7 +132,7 @@ export default function Home() {
           control={
             <Checkbox
               checked={hideDone}
-              onChange={(e) => setHideDone(e.target.checked)}
+              onChange={(e) => handleHideDoneChange(e.target.checked)}
             />
           }
           label="Hide completed"
@@ -120,6 +145,14 @@ export default function Home() {
         onDelete={handleDelete}
         onToggleStatus={handleToggleStatus}
       />
+
+      {meta && (
+        <PaginationControl
+          currentPage={meta.currentPage}
+          totalPage={meta.totalPage}
+          onChange={setPage}
+        />
+      )}
 
       <Box sx={{ position: "fixed", bottom: 32, right: 32 }}>
         <Fab color="primary" aria-label="add" onClick={() => openModal(null)}>

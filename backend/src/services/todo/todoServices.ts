@@ -6,6 +6,7 @@ type TodoRecord = {
   title: string;
   description: string | null;
   createdAt: Date;
+  updated_at: Date;
   done_at: Date | null;
 };
 function createTodoRecord(todo: Prisma.TodoGetPayload<object>): TodoRecord {
@@ -14,31 +15,53 @@ function createTodoRecord(todo: Prisma.TodoGetPayload<object>): TodoRecord {
     title: todo.title,
     description: todo.description,
     createdAt: todo.createdAt,
+    updated_at: todo.updated_at,
     done_at: todo.done_at,
   };
 }
 
 export interface ITodoListService {
   includeDone?: boolean;
+  skip?: number;
+  take?: number;
 }
 
 export class TodoListService {
   private includeDone: boolean;
+  private skip?: number;
+  private take?: number;
 
-  constructor({ includeDone }: ITodoListService = {}) {
+  constructor({ includeDone, skip, take }: ITodoListService = {}) {
     this.includeDone = includeDone ?? false;
+    this.skip = skip;
+    this.take = take;
   }
 
-  async getData(): Promise<TodoRecord[]> {
+  async getData(): Promise<{ todos: TodoRecord[]; totalCount: number }> {
     const doneCondition: Prisma.TodoWhereInput = this.includeDone
       ? {}
       : { done_at: null };
-    const todoList = await prisma.todo.findMany({
-      where: {
-        ...doneCondition,
-      },
-    });
-    return todoList.map(createTodoRecord);
+
+    const [todoList, totalCount] = await Promise.all([
+      prisma.todo.findMany({
+        where: {
+          ...doneCondition,
+        },
+        skip: this.skip,
+        take: this.take,
+        orderBy: [{ updated_at: "desc" }, { id: "asc" }],
+      }),
+      prisma.todo.count({
+        where: {
+          ...doneCondition,
+        },
+      }),
+    ]);
+
+    return {
+      todos: todoList.map(createTodoRecord),
+      totalCount,
+    };
   }
 }
 

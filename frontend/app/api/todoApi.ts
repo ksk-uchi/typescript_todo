@@ -1,22 +1,36 @@
 import axios from "axios";
 import type { CreateTodoDto, Todo, UpdateTodoDto } from "../types";
 
+export interface PaginationMeta {
+  totalCount: number;
+  totalPage: number;
+  currentPage: number;
+  itemsPerPage: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+}
+
+export interface GetTodoListResponse {
+  todo: Todo[];
+  meta: PaginationMeta;
+}
+
 const baseURL = "http://localhost:3000/todo";
 
 const api = axios.create({
   baseURL: baseURL,
 });
 
-type todoListApiResponse = {
-  todo: Todo[];
-};
-
 export const todoApi = {
-  getAll: async (includeDone: boolean = false): Promise<Todo[]> => {
-    const response = await api.get<todoListApiResponse>("/", {
-      params: { include_done: includeDone },
+  getAll: async (
+    includeDone: boolean = false,
+    page: number = 1,
+    items_per_page: number = 20,
+  ): Promise<GetTodoListResponse> => {
+    const response = await api.get<GetTodoListResponse>("/", {
+      params: { include_done: includeDone, page, items_per_page },
     });
-    return response.data.todo;
+    return response.data;
   },
 
   getById: async (id: number): Promise<Todo> => {

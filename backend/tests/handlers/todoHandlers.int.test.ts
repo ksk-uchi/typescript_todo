@@ -36,15 +36,28 @@ describe("todoHandlers Integration", () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty("todo");
     expect(response.body.todo).toHaveLength(2);
-    expect(response.body).toEqual({
-      todo: todos.map((todo) => ({
+    expect(response.body.meta).toEqual({
+      totalCount: 2,
+      totalPage: 1,
+      currentPage: 1,
+      itemsPerPage: 20,
+      hasNext: false,
+      hasPrevious: false,
+    });
+    // Soritng check: updated_at desc, id asc
+    // The created todos have same updated_at/created_at (transactional or fast enough)
+    // Order might rely on ID if updated_at is same.
+    expect(response.body.todo[0].id).toBeLessThan(response.body.todo[1].id);
+    expect(response.body.todo).toEqual(
+      todos.map((todo) => ({
         id: todo.id,
         title: todo.title,
         description: todo.description,
         createdAt: todo.createdAt.toISOString(),
+        updated_at: todo.updated_at.toISOString(),
         done_at: null,
       })),
-    });
+    );
   });
 
   it("[GET /todo] 完了済みの todo はデフォルトで取得されないこと", async () => {
@@ -88,6 +101,67 @@ describe("todoHandlers Integration", () => {
     expect(response.body.todo).toHaveLength(2);
   });
 
+  it("[GET /todo] ページネーションが動作すること", async () => {
+    // Create 30 todos
+    const data = Array.from({ length: 30 }).map((_, i) => ({
+      title: `todo ${i + 1}`,
+    }));
+    await prisma.todo.createMany({ data });
+
+    // Page 1, Default 20 items
+    const res1 = await request(app).get("/todo");
+    expect(res1.body.todo).toHaveLength(20);
+    expect(res1.body.meta).toEqual({
+      totalCount: 30,
+      totalPage: 2,
+      currentPage: 1,
+      itemsPerPage: 20,
+      hasNext: true,
+      hasPrevious: false,
+    });
+
+    // Page 2, Default 20 items (should have 10 remaining)
+    const res2 = await request(app).get("/todo?page=2");
+    expect(res2.body.todo).toHaveLength(10);
+    expect(res2.body.meta).toEqual({
+      totalCount: 30,
+      totalPage: 2,
+      currentPage: 2,
+      itemsPerPage: 20,
+      hasNext: false,
+      hasPrevious: true,
+    });
+  });
+
+  it("[GET /todo] items_per_page が動作すること", async () => {
+    const data = Array.from({ length: 5 }).map((_, i) => ({
+      title: `todo ${i + 1}`,
+    }));
+    await prisma.todo.createMany({ data });
+
+    const res = await request(app).get("/todo?items_per_page=3");
+    expect(res.body.todo).toHaveLength(3);
+    expect(res.body.meta).toEqual({
+      totalCount: 5,
+      totalPage: 2,
+      currentPage: 1,
+      itemsPerPage: 3,
+      hasNext: true,
+      hasPrevious: false,
+    });
+  });
+
+  it("[GET /todo] 存在しないページは 404 を返すこと", async () => {
+    await prisma.todo.create({ data: { title: "test" } });
+    const res = await request(app).get("/todo?page=100");
+    expect(res.status).toBe(404);
+  });
+
+  it("[GET /todo] items_per_page の最大値(100)を超えると 422 エラー", async () => {
+    const res = await request(app).get("/todo?items_per_page=101");
+    expect(res.status).toBe(422);
+  });
+
   it("[GET /todo/:id] todo を1件取得できること", async () => {
     const todo = await prisma.todo.create({
       data: {
@@ -104,6 +178,7 @@ describe("todoHandlers Integration", () => {
       title: todo.title,
       description: todo.description,
       createdAt: todo.createdAt.toISOString(),
+      updated_at: todo.updated_at.toISOString(),
       done_at: null,
     });
   });
@@ -144,6 +219,7 @@ describe("todoHandlers Integration", () => {
       title: "test title",
       description: null,
       createdAt: expect.any(Date),
+      updated_at: expect.any(Date),
       done_at: null,
     });
   });
@@ -175,6 +251,7 @@ describe("todoHandlers Integration", () => {
     expect(response.body).toEqual({
       ...expectedTodo,
       createdAt: todo.createdAt.toISOString(),
+      updated_at: expect.any(String),
       done_at: null,
     });
 
@@ -184,6 +261,7 @@ describe("todoHandlers Integration", () => {
     expect(updatedTodo).toEqual({
       ...expectedTodo,
       createdAt: todo.createdAt,
+      updated_at: expect.any(Date),
       done_at: null,
     });
   });

@@ -19,16 +19,44 @@ export const listTodoHandler = async (req: Request, res: Response) => {
       .optional()
       .default("false")
       .transform((v) => v === "true"),
+    page: z.coerce.number().min(1).default(1),
+    items_per_page: z.coerce.number().min(1).max(100).default(20),
   });
   const result = schema.safeParse(req.query);
   if (!result.success) {
     throw new ValidationError("", result.error);
   }
-  const { include_done } = result.data;
+  const { include_done, page, items_per_page } = result.data;
 
-  const service = new TodoListService({ includeDone: include_done });
+  const skip = (page - 1) * items_per_page;
+  const take = items_per_page;
+
+  const service = new TodoListService({
+    includeDone: include_done,
+    skip,
+    take,
+  });
+  const { todos, totalCount } = await service.getData();
+
+  const totalPage = Math.ceil(totalCount / items_per_page);
+  // totalCount > 0 の場合、指定ページが範囲外なら 404
+  // totalCount === 0 の場合、page === 1 は許容する
+  if (totalCount > 0 && page > totalPage) {
+    throw new NotFoundError(`Page ${page} not found`);
+  } else if (totalCount === 0 && page > 1) {
+    throw new NotFoundError(`Page ${page} not found`);
+  }
+
   res.json({
-    todo: await service.getData(),
+    todo: todos,
+    meta: {
+      totalCount,
+      totalPage,
+      currentPage: page,
+      itemsPerPage: items_per_page,
+      hasNext: page < totalPage,
+      hasPrevious: page > 1,
+    },
   });
 };
 
