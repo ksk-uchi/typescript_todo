@@ -14,6 +14,10 @@ const errorHandler = (
       .json({ message: err.message, targets: err.targets });
   }
 
+  if (err instanceof CSRFError) {
+    return res.status(403).json({ message: "Forbidden" });
+  }
+
   if (err instanceof ClientSideError) {
     return res.status(err.status).json({ message: err.message });
   }
