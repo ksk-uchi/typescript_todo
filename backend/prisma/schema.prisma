@@ -21,6 +21,7 @@ model Todo {
   description  String?    @db.VarChar(256)
 
   done_at     DateTime?
+  updated_at  DateTime    @default(now()) @updatedAt
   createdAt   DateTime    @default(now()) @map("created_at")
 
   @@map("todo")
