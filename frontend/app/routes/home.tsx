@@ -8,16 +8,11 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { todoApi } from "../api/todoApi";
+import { PaginationMeta, todoApi } from "../api/todoApi";
 import PaginationControl from "../components/PaginationControl";
 import TodoList from "../components/TodoList";
 import TodoModal from "../components/TodoModal";
-import type {
-  CreateTodoDto,
-  PaginationMeta,
-  Todo,
-  UpdateTodoDto,
-} from "../types";
+import type { CreateTodoDto, Todo, UpdateTodoDto } from "../types";
 import type { Route } from "./+types/home";
 
 export function meta({}: Route.MetaArgs) {

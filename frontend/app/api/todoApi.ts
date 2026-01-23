@@ -1,10 +1,19 @@
 import axios from "axios";
-import type {
-  CreateTodoDto,
-  GetTodoListResponse,
-  Todo,
-  UpdateTodoDto,
-} from "../types";
+import type { CreateTodoDto, Todo, UpdateTodoDto } from "../types";
+
+export interface PaginationMeta {
+  totalCount: number;
+  totalPage: number;
+  currentPage: number;
+  itemsPerPage: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+}
+
+export interface GetTodoListResponse {
+  todo: Todo[];
+  meta: PaginationMeta;
+}
 
 const baseURL = "http://localhost:3000/todo";
 
