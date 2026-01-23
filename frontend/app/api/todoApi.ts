@@ -35,6 +35,16 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (axios.isAxiosError(error) && error.response?.status === 403) {
+      window.location.href = "/?error=csrf";
+    }
+    return Promise.reject(error);
+  },
+);
+
 export const todoApi = {
   getAll: async (
     includeDone: boolean = false,
