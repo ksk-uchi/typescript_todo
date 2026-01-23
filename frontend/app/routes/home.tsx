@@ -8,7 +8,8 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { PaginationMeta, todoApi } from "../api/todoApi";
+import type { PaginationMeta } from "../api/todoApi";
+import { todoApi } from "../api/todoApi";
 import PaginationControl from "../components/PaginationControl";
 import TodoList from "../components/TodoList";
 import TodoModal from "../components/TodoModal";
