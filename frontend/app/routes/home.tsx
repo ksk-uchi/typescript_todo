@@ -92,12 +92,13 @@ export default function Home() {
 
   const handleToggleStatus = async (id: number, is_done: boolean) => {
     try {
-      await todoApi.updateDoneStatus(id, is_done);
+      const updatedTodo = await todoApi.updateDoneStatus(id, is_done);
       // ステータス更新で順序が変わる可能性があるため、リフェッチが安全だが、
       // ここではUX優先でローカル更新しつつ、必要ならリフェッチ
       // 今回の仕様変更で updated_at 順になるので、更新すると順序が変わるはず。
       // なのでリフェッチする。
-      await fetchTodos();
+      // -> Revert: Hide Completed 有効時に消えてしまうのを防ぐため、リフェッチせずローカル更新のみにする
+      setTodos((prev) => prev.map((t) => (t.id === id ? updatedTodo : t)));
       showSnackbar("Todo status updated successfully", "success");
     } catch (error) {
       console.error("Failed to update todo status", error);
