@@ -19,6 +19,20 @@ const baseURL = "http://localhost:3000/todo";
 
 const api = axios.create({
   baseURL: baseURL,
+  withCredentials: true,
+});
+
+api.interceptors.request.use((config) => {
+  const getCookie = (name: string) => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop()?.split(";").shift();
+  };
+  const token = getCookie("_csrf");
+  if (token) {
+    config.headers["X-CSRF-Token"] = token;
+  }
+  return config;
 });
 
 export const todoApi = {
