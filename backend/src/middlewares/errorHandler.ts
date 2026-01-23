@@ -1,4 +1,8 @@
-import { ClientSideError, ValidationError } from "@/errors/clientSideError";
+import {
+  ClientSideError,
+  CSRFError,
+  ValidationError,
+} from "@/errors/clientSideError";
 import { NextFunction, Request, Response } from "express";
 
 const errorHandler = (
@@ -12,6 +16,10 @@ const errorHandler = (
     return res
       .status(err.status)
       .json({ message: err.message, targets: err.targets });
+  }
+
+  if (err instanceof CSRFError) {
+    return res.status(403).json({ message: "Forbidden" });
   }
 
   if (err instanceof ClientSideError) {

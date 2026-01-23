@@ -10,6 +10,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router";
 import type { PaginationMeta } from "../api/todoApi";
 import { todoApi } from "../api/todoApi";
 import PaginationControl from "../components/PaginationControl";
@@ -41,6 +42,20 @@ export default function Home() {
     message: "",
     severity: "success",
   });
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("error") === "csrf") {
+      setSnackbar({
+        open: true,
+        message: "操作に失敗しました。再度試してください",
+        severity: "error",
+      });
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("error");
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
